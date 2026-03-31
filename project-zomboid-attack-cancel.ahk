@@ -101,8 +101,6 @@ macroGui.Add("Text", "xm y+18", "Technique 3 - Forced Ground Attack")
 chordEnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 3")
 chordEnabledCtrl.Value := chordEnabled
 
-macroGui.Add("Text", "xm y+6 w440", "Hold the Technique 3 trigger. This forces ground attack by holding Alt + Space.")
-
 macroGui.Add("Text", "xm y+10", "Trigger button")
 chordTriggerCtrl := macroGui.Add("Edit", "xm w150 ReadOnly", chordTrigger)
 chordSetTriggerButton := macroGui.Add("Button", "x+8 w95", "Set Trigger")
@@ -111,8 +109,6 @@ macroGui.Add("Text", "xm y+18", "Technique 4 - Standing Knockdown")
 tech4EnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 4")
 tech4EnabledCtrl.Value := tech4Enabled
 
-macroGui.Add("Text", "xm y+6 w440", "Press the Technique 4 trigger. It fires once per press.")
-
 macroGui.Add("Text", "xm y+10", "Trigger button")
 tech4TriggerCtrl := macroGui.Add("Edit", "xm w150 ReadOnly", tech4Trigger)
 tech4SetTriggerButton := macroGui.Add("Button", "x+8 w95", "Set Trigger")
@@ -120,8 +116,6 @@ tech4SetTriggerButton := macroGui.Add("Button", "x+8 w95", "Set Trigger")
 macroGui.Add("Text", "xm y+18", "Technique 5 - Dry Fire Loop")
 tech5EnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 5")
 tech5EnabledCtrl.Value := tech5Enabled
-
-macroGui.Add("Text", "xm y+6 w440", "Default trigger is XButton3. Technique 5 holds Space and repeatedly taps Alt. If your mouse does not expose it, use Set Trigger and press another key or button.")
 
 macroGui.Add("Text", "xm y+10", "Trigger button")
 tech5TriggerCtrl := macroGui.Add("Edit", "xm w150 ReadOnly", tech5Trigger)
@@ -136,12 +130,6 @@ tech5TapHoldCtrl := macroGui.Add("Edit", "x+6 w90 Number", tech5TapHoldMs)
 toggleButton := macroGui.Add("Button", "xm y+18 w110", "Start (F8)")
 saveButton := macroGui.Add("Button", "x+8 w90", "Save")
 resetButton := macroGui.Add("Button", "x+8 w110", "Reset Defaults")
-
-helpText := macroGui.Add(
-    "Text",
-    "xm y+14 w440",
-    "F8 start/stop, F9 exit. Technique 3 is forced ground attack. Technique 4 is the standing-zombie knockdown. Technique 5 is the dry-fire loop and taps Alt while holding Space. Technique 3/4/5 triggers can be captured from the next key or mouse button you press."
-)
 
 meleeEnabledCtrl.OnEvent("Click", OnSettingsChanged)
 meleeModeCtrl.OnEvent("Change", OnSettingsChanged)
