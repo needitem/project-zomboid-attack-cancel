@@ -62,6 +62,7 @@ tech4SwapPulseKey := ""
 lastTech5AltAt := 0
 tech5AltPulseActive := false
 tech5AltPulseReleaseAt := 0
+tech5PulseMovementKeys := []
 tech5SpaceHeld := false
 triggerCaptureTarget := ""
 triggerCaptureIgnoreMap := Map()
@@ -134,17 +135,11 @@ macroGui.Add("Text", "xm y+18", "Technique 3 - Forced Ground Attack")
 chordEnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 3")
 chordEnabledCtrl.Value := chordEnabled
 
-macroGui.Add("Text", "xm y+6 w440", "Hold the Technique 3 trigger. This forces ground attack by repeatedly tapping Alt + Space.")
+macroGui.Add("Text", "xm y+6 w440", "Hold the Technique 3 trigger. This forces ground attack by holding Alt + Space.")
 
 macroGui.Add("Text", "xm y+10", "Trigger button")
 chordTriggerCtrl := macroGui.Add("Edit", "xm w150 ReadOnly", chordTrigger)
 chordSetTriggerButton := macroGui.Add("Button", "x+8 w95", "Set Trigger")
-
-macroGui.Add("Text", "xm y+10", "Interval (ms)")
-chordIntervalCtrl := macroGui.Add("Edit", "xm w90 Number", chordIntervalMs)
-
-macroGui.Add("Text", "x+14 yp", "Tap hold (ms)")
-chordTapHoldCtrl := macroGui.Add("Edit", "x+6 w90 Number", chordTapHoldMs)
 
 macroGui.Add("Text", "xm y+18", "Technique 4 - Standing Knockdown")
 tech4EnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 4")
@@ -172,7 +167,7 @@ macroGui.Add("Text", "xm y+18", "Technique 5 - Dry Fire Loop")
 tech5EnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 5")
 tech5EnabledCtrl.Value := tech5Enabled
 
-macroGui.Add("Text", "xm y+6 w440", "Default trigger is XButton3. Technique 5 holds Space and taps Alt + A. If your mouse does not expose it, use Set Trigger and press another key or button.")
+macroGui.Add("Text", "xm y+6 w440", "Default trigger is XButton3. Technique 5 holds Space and taps Alt plus your currently held WASD direction. If your mouse does not expose it, use Set Trigger and press another key or button.")
 
 macroGui.Add("Text", "xm y+10", "Trigger button")
 tech5TriggerCtrl := macroGui.Add("Edit", "xm w150 ReadOnly", tech5Trigger)
@@ -191,7 +186,7 @@ resetButton := macroGui.Add("Button", "x+8 w110", "Reset Defaults")
 helpText := macroGui.Add(
     "Text",
     "xm y+14 w440",
-    "F8 start/stop, F9 exit. Technique 1 can use outline colors in windowed mode. Technique 3 is forced ground attack. Technique 4 is the standing-zombie knockdown. Technique 5 is the dry-fire loop and taps Alt + A while holding Space. Technique 3/4/5 triggers can be captured from the next key or mouse button you press."
+    "F8 start/stop, F9 exit. Technique 1 can use outline colors in windowed mode. Technique 3 is forced ground attack. Technique 4 is the standing-zombie knockdown. Technique 5 is the dry-fire loop and taps Alt plus your held WASD direction while holding Space. Technique 3/4/5 triggers can be captured from the next key or mouse button you press."
 )
 
 meleeEnabledCtrl.OnEvent("Click", OnSettingsChanged)
@@ -202,8 +197,6 @@ meleeAttackLeadCtrl.OnEvent("Change", OnSettingsChanged)
 outlineEnabledCtrl.OnEvent("Click", OnSettingsChanged)
 chordEnabledCtrl.OnEvent("Click", OnSettingsChanged)
 chordSetTriggerButton.OnEvent("Click", BeginTriggerCapture.Bind("chord"))
-chordIntervalCtrl.OnEvent("Change", OnSettingsChanged)
-chordTapHoldCtrl.OnEvent("Change", OnSettingsChanged)
 tech4EnabledCtrl.OnEvent("Click", OnSettingsChanged)
 tech4SetTriggerButton.OnEvent("Click", BeginTriggerCapture.Bind("tech4"))
 tech4SwapEnabledCtrl.OnEvent("Click", OnSettingsChanged)
@@ -360,9 +353,7 @@ ApplyGuiToState(showNotice := true, syncControls := true) {
     global appExe
     global chordEnabled
     global chordEnabledCtrl
-    global chordIntervalCtrl
     global chordIntervalMs
-    global chordTapHoldCtrl
     global chordTapHoldMs
     global chordTrigger
     global chordTriggerCtrl
@@ -412,8 +403,6 @@ ApplyGuiToState(showNotice := true, syncControls := true) {
     outlineEnabled := outlineEnabledCtrl.Value
 
     chordEnabled := chordEnabledCtrl.Value
-    chordIntervalMs := ClampInt(ParseWhole(chordIntervalCtrl.Value, defaultChordIntervalMs), 20, 5000)
-    chordTapHoldMs := ClampInt(ParseWhole(chordTapHoldCtrl.Value, defaultChordTapHoldMs), 1, 200)
 
     tech4Enabled := tech4EnabledCtrl.Value
     tech4IntervalMs := ClampInt(ParseWhole(tech4IntervalCtrl.Value, defaultTech4IntervalMs), 20, 5000)
@@ -431,8 +420,6 @@ ApplyGuiToState(showNotice := true, syncControls := true) {
         meleeTapHoldCtrl.Value := meleeTapHoldMs
         meleeAttackLeadCtrl.Value := meleeAttackLeadMs
         chordTriggerCtrl.Value := chordTrigger
-        chordIntervalCtrl.Value := chordIntervalMs
-        chordTapHoldCtrl.Value := chordTapHoldMs
         tech4TriggerCtrl.Value := tech4Trigger
         tech4IntervalCtrl.Value := tech4IntervalMs
         tech4TapHoldCtrl.Value := tech4TapHoldMs
@@ -452,8 +439,6 @@ ApplyGuiToState(showNotice := true, syncControls := true) {
 
 UpdateGuiState() {
     global chordEnabled
-    global chordIntervalMs
-    global chordTapHoldMs
     global chordTrigger
     global enabled
     global hintText
@@ -476,15 +461,14 @@ UpdateGuiState() {
     statusText.Text := "Status: " (enabled ? "ON" : "OFF")
         . " | T1: " (meleeEnabled ? "ON" : "OFF") " " meleeIntervalMs " ms " ModeLabel(meleeMode)
         . (outlineEnabled ? " outline" : "")
-        . " | T3: " (chordEnabled ? "ON" : "OFF") " " chordTrigger
-        . " => " chordIntervalMs " ms"
+        . " | T3: " (chordEnabled ? "ON" : "OFF") " " chordTrigger " hold"
         . " | T4: " (tech4Enabled ? "ON" : "OFF") " " tech4Trigger " => " tech4IntervalMs " ms"
         . (tech4SwapEnabled ? " swap" tech4SwapSlot : "")
         . " | T5: " (tech5Enabled ? "ON" : "OFF") " " tech5Trigger " => " tech5IntervalMs " ms"
 
     hintText.Text := "T1 interval = " meleeIntervalMs " ms | T1 hold = " meleeTapHoldMs " ms"
         . " | T1 outline colors = 68F072 / 07FF0E"
-        . " | T3 interval = " chordIntervalMs " ms | T3 hold = " chordTapHoldMs " ms"
+        . " | T3 = hold Alt + Space"
         . " | T4 interval = " tech4IntervalMs " ms | T4 hold = " tech4TapHoldMs " ms"
         . " | T5 interval = " tech5IntervalMs " ms"
 
@@ -506,12 +490,10 @@ HideToolTip() {
 
 StartTechnique3Pulse(holdMs) {
     global chordPulseActive
-    global chordPulseReleaseAt
 
     SendEvent("{Blind}{LAlt down}")
     SendEvent("{Blind}{Space down}")
     chordPulseActive := true
-    chordPulseReleaseAt := A_TickCount + holdMs
 }
 
 StopTechnique3Pulse() {
@@ -530,10 +512,7 @@ StopTechnique3Pulse() {
 }
 
 ResetTechnique3Pulse() {
-    global lastChordPulseAt
-
     StopTechnique3Pulse()
-    lastChordPulseAt := 0
 }
 
 StartTechnique4Pulse(holdMs, swapEnabled, swapSlot) {
@@ -579,12 +558,24 @@ ResetTechnique4Pulse() {
     lastTech4PulseAt := 0
 }
 
+CurrentMovementKeys() {
+    keys := []
+    for keyName in ["W", "A", "S", "D"] {
+        if TriggerIsPressed(keyName)
+            keys.Push(keyName)
+    }
+    return keys
+}
+
 StartTechnique5AltPulse(holdMs) {
     global tech5AltPulseActive
     global tech5AltPulseReleaseAt
+    global tech5PulseMovementKeys
 
+    tech5PulseMovementKeys := CurrentMovementKeys()
     SendEvent("{Blind}{LAlt down}")
-    SendEvent("{Blind}{A down}")
+    for _, keyName in tech5PulseMovementKeys
+        SendEvent("{Blind}{" keyName " down}")
     tech5AltPulseActive := true
     tech5AltPulseReleaseAt := A_TickCount + holdMs
 }
@@ -592,16 +583,20 @@ StartTechnique5AltPulse(holdMs) {
 StopTechnique5AltPulse() {
     global tech5AltPulseActive
     global tech5AltPulseReleaseAt
+    global tech5PulseMovementKeys
 
     if !tech5AltPulseActive {
         tech5AltPulseReleaseAt := 0
+        tech5PulseMovementKeys := []
         return
     }
 
-    SendEvent("{Blind}{A up}")
+    for _, keyName in tech5PulseMovementKeys
+        SendEvent("{Blind}{" keyName " up}")
     SendEvent("{Blind}{LAlt up}")
     tech5AltPulseActive := false
     tech5AltPulseReleaseAt := 0
+    tech5PulseMovementKeys := []
 }
 
 HoldTechnique5Space() {
@@ -832,11 +827,7 @@ CheckOutlineTrigger() {
 }
 
 CheckTechnique3() {
-    global chordIntervalMs
     global chordPulseActive
-    global chordPulseReleaseAt
-    global chordTapHoldMs
-    global lastChordPulseAt
 
     if !Technique3Held() {
         ResetTechnique3Pulse()
@@ -848,17 +839,10 @@ CheckTechnique3() {
         return
     }
 
-    if chordPulseActive {
-        if (A_TickCount >= chordPulseReleaseAt)
-            StopTechnique3Pulse()
-        return
-    }
-
-    if (A_TickCount - lastChordPulseAt < chordIntervalMs)
+    if chordPulseActive
         return
 
-    StartTechnique3Pulse(chordTapHoldMs)
-    lastChordPulseAt := A_TickCount
+    StartTechnique3Pulse(0)
 }
 
 CheckTechnique4() {
@@ -1068,8 +1052,6 @@ WriteConfig(showNotice := true, syncControls := true) {
 
 ResetDefaults(*) {
     global chordEnabledCtrl
-    global chordIntervalCtrl
-    global chordTapHoldCtrl
     global chordTriggerCtrl
     global meleeAttackLeadCtrl
     global meleeEnabledCtrl
@@ -1098,8 +1080,6 @@ ResetDefaults(*) {
 
     chordEnabledCtrl.Value := defaultChordEnabled
     chordTriggerCtrl.Value := defaultChordTrigger
-    chordIntervalCtrl.Value := defaultChordIntervalMs
-    chordTapHoldCtrl.Value := defaultChordTapHoldMs
 
     tech4EnabledCtrl.Value := defaultTech4Enabled
     tech4TriggerCtrl.Value := defaultTech4Trigger

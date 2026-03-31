@@ -18,12 +18,12 @@ Techniques:
 - Technique 1 can also use outline color trigger in windowed mode
 - Technique 1 outline colors are `68F072` and `07FF0E`
 - Technique 3: Forced Ground Attack
-- Technique 3 repeatedly taps `Alt + Space`
+- Technique 3 holds `Alt + Space`
 - Technique 4: Standing Knockdown
 - Technique 4 can also tap swap slot `1`, `2`, or `3`
 - Technique 5: Dry Fire Loop
 - Technique 5 default trigger is `XButton3`, or capture another key/button
-- Technique 5 holds `Space` and repeatedly taps `Alt + A`
+- Technique 5 holds `Space` and repeatedly taps `Alt` plus your currently held `W/A/S/D`
 
 Notes:
 
