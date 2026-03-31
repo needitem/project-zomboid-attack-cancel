@@ -34,7 +34,7 @@ tech4PulseHoldMs := 18
 
 defaultTech5Enabled := 1
 defaultTech5Trigger := "XButton3"
-defaultTech5IntervalMs := 50
+defaultTech5DelaySec := 0.05
 defaultTech5TapHoldMs := 10
 
 toggleKey := "F8"
@@ -55,9 +55,9 @@ chordPulseReleaseAt := 0
 tech4PulseActive := false
 tech4PulseReleaseAt := 0
 tech4Latched := false
-lastTech5AltAt := 0
 tech5AltPulseActive := false
-tech5AltPulseReleaseAt := 0
+tech5Phase := "idle"
+tech5DueAt := 0
 tech5SpaceHeld := false
 triggerCaptureTarget := ""
 triggerCaptureIgnoreMap := Map()
@@ -90,7 +90,16 @@ tech4Trigger := IniRead(configPath, "tech4", "trigger", defaultTech4Trigger)
 
 tech5Enabled := ParseBool(IniRead(configPath, "tech5", "enabled", defaultTech5Enabled), defaultTech5Enabled)
 tech5Trigger := IniRead(configPath, "tech5", "trigger", defaultTech5Trigger)
-tech5IntervalMs := ClampInt(ParseWhole(IniRead(configPath, "tech5", "intervalMs", defaultTech5IntervalMs), defaultTech5IntervalMs), 20, 5000)
+rawTech5DelaySec := IniRead(configPath, "tech5", "loopDelaySec", "")
+if (Trim(String(rawTech5DelaySec)) = "") {
+    legacyTech5IntervalMs := IniRead(configPath, "tech5", "intervalMs", "")
+    if (Trim(String(legacyTech5IntervalMs)) != "")
+        tech5DelaySec := ClampFloat(ParseFloat(legacyTech5IntervalMs, defaultTech5DelaySec * 1000) / 1000, 0.02, 0.15)
+    else
+        tech5DelaySec := defaultTech5DelaySec
+} else {
+    tech5DelaySec := ClampFloat(ParseFloat(rawTech5DelaySec, defaultTech5DelaySec), 0.02, 0.15)
+}
 tech5TapHoldMs := ClampInt(ParseWhole(IniRead(configPath, "tech5", "tapHoldMs", defaultTech5TapHoldMs), defaultTech5TapHoldMs), 1, 200)
 
 macroGui := Gui("+AlwaysOnTop", "Project Zomboid Attack Cancel")
@@ -147,14 +156,14 @@ macroGui.Add("Text", "xm y+18", "Technique 5 - Dry Fire Loop")
 tech5EnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 5")
 tech5EnabledCtrl.Value := tech5Enabled
 
-macroGui.Add("Text", "xm y+6 w440", "Default trigger is XButton3. Technique 5 holds Space and taps Alt + A. If your mouse does not expose it, use Set Trigger and press another key or button.")
+macroGui.Add("Text", "xm y+6 w440", "Default trigger is XButton3. Technique 5 taps Alt, waits 70 ms, taps Space, then waits the configured loop delay.")
 
 macroGui.Add("Text", "xm y+10", "Trigger button")
 tech5TriggerCtrl := macroGui.Add("Edit", "xm w150 ReadOnly", tech5Trigger)
 tech5SetTriggerButton := macroGui.Add("Button", "x+8 w95", "Set Trigger")
 
-macroGui.Add("Text", "xm y+10", "Interval (ms)")
-tech5IntervalCtrl := macroGui.Add("Edit", "xm w90 Number", tech5IntervalMs)
+macroGui.Add("Text", "xm y+10", "Loop delay (sec)")
+tech5IntervalCtrl := macroGui.Add("Edit", "xm w90", FormatDelaySec(tech5DelaySec))
 
 macroGui.Add("Text", "x+14 yp", "Tap hold (ms)")
 tech5TapHoldCtrl := macroGui.Add("Edit", "x+6 w90 Number", tech5TapHoldMs)
@@ -166,7 +175,7 @@ resetButton := macroGui.Add("Button", "x+8 w110", "Reset Defaults")
 helpText := macroGui.Add(
     "Text",
     "xm y+14 w440",
-    "F8 start/stop, F9 exit. Technique 1 can use outline colors in windowed mode. Technique 3 is forced ground attack. Technique 4 is the standing-zombie knockdown. Technique 5 is the dry-fire loop and taps Alt + A while holding Space. Technique 3/4/5 triggers can be captured from the next key or mouse button you press."
+    "F8 start/stop, F9 exit. Technique 1 can use outline colors in windowed mode. Technique 3 is forced ground attack. Technique 4 is the standing-zombie knockdown. Technique 5 taps Alt, waits 70 ms, taps Space, then waits the configured loop delay. Technique 3/4/5 triggers can be captured from the next key or mouse button you press."
 )
 
 meleeEnabledCtrl.OnEvent("Click", OnSettingsChanged)
@@ -213,6 +222,18 @@ ParseWhole(value, fallback) {
     return parsed
 }
 
+ParseFloat(value, fallback) {
+    value := Trim(String(value))
+    if (value = "")
+        return fallback
+
+    try parsed := value + 0.0
+    catch
+        return fallback
+
+    return parsed
+}
+
 ParseBool(value, fallback := 0) {
     value := Trim(String(value))
     if (value = "")
@@ -226,6 +247,18 @@ ClampInt(value, min, max) {
     if (value > max)
         return max
     return value
+}
+
+ClampFloat(value, min, max) {
+    if (value < min)
+        return min
+    if (value > max)
+        return max
+    return value
+}
+
+FormatDelaySec(value) {
+    return Format("{:.2f}", value)
 }
 
 TriggerIsPressed(keyName) {
@@ -390,7 +423,7 @@ ApplyGuiToState(showNotice := true, syncControls := true) {
     global tech5Enabled
     global tech5EnabledCtrl
     global tech5IntervalCtrl
-    global tech5IntervalMs
+    global tech5DelaySec
     global tech5TapHoldCtrl
     global tech5TapHoldMs
     global tech5Trigger
@@ -414,7 +447,7 @@ ApplyGuiToState(showNotice := true, syncControls := true) {
 
     tech5Enabled := tech5EnabledCtrl.Value
     tech5Trigger := Trim(tech5TriggerCtrl.Value)
-    tech5IntervalMs := ClampInt(ParseWhole(tech5IntervalCtrl.Value, defaultTech5IntervalMs), 20, 5000)
+    tech5DelaySec := ClampFloat(ParseFloat(tech5IntervalCtrl.Value, defaultTech5DelaySec), 0.02, 0.15)
     tech5TapHoldMs := ClampInt(ParseWhole(tech5TapHoldCtrl.Value, defaultTech5TapHoldMs), 1, 200)
 
     if syncControls {
@@ -424,7 +457,7 @@ ApplyGuiToState(showNotice := true, syncControls := true) {
         chordTriggerCtrl.Value := chordTrigger
         tech4TriggerCtrl.Value := tech4Trigger
         tech5TriggerCtrl.Value := tech5Trigger
-        tech5IntervalCtrl.Value := tech5IntervalMs
+        tech5IntervalCtrl.Value := FormatDelaySec(tech5DelaySec)
         tech5TapHoldCtrl.Value := tech5TapHoldMs
     }
     meleeAttackLeadCtrl.Enabled := (meleeMode = "click_and_space")
@@ -449,7 +482,7 @@ UpdateGuiState() {
     global tech4Enabled
     global tech4Trigger
     global tech5Enabled
-    global tech5IntervalMs
+    global tech5DelaySec
     global tech5Trigger
     global toggleButton
 
@@ -458,13 +491,13 @@ UpdateGuiState() {
         . (outlineEnabled ? " outline" : "")
         . " | T3: " (chordEnabled ? "ON" : "OFF") " " chordTrigger " hold"
         . " | T4: " (tech4Enabled ? "ON" : "OFF") " " tech4Trigger " one-shot"
-        . " | T5: " (tech5Enabled ? "ON" : "OFF") " " tech5Trigger " => " tech5IntervalMs " ms"
+        . " | T5: " (tech5Enabled ? "ON" : "OFF") " " tech5Trigger " => " FormatDelaySec(tech5DelaySec) " s"
 
     hintText.Text := "T1 interval = " meleeIntervalMs " ms | T1 hold = " meleeTapHoldMs " ms"
         . " | T1 outline colors = 68F072 / 07FF0E"
         . " | T3 = hold Alt + Space"
         . " | T4 = one-shot Alt + Space"
-        . " | T5 interval = " tech5IntervalMs " ms"
+        . " | T5 delay = " FormatDelaySec(tech5DelaySec) " s"
 
     toggleButton.Text := enabled ? "Stop (F8)" : "Start (F8)"
 }
@@ -544,27 +577,20 @@ ResetTechnique4Pulse() {
 
 StartTechnique5AltPulse(holdMs) {
     global tech5AltPulseActive
-    global tech5AltPulseReleaseAt
 
     SendEvent("{Blind}{LAlt down}")
-    SendEvent("{Blind}{A down}")
     tech5AltPulseActive := true
-    tech5AltPulseReleaseAt := A_TickCount + holdMs
 }
 
 StopTechnique5AltPulse() {
     global tech5AltPulseActive
-    global tech5AltPulseReleaseAt
 
     if !tech5AltPulseActive {
-        tech5AltPulseReleaseAt := 0
         return
     }
 
-    SendEvent("{Blind}{A up}")
     SendEvent("{Blind}{LAlt up}")
     tech5AltPulseActive := false
-    tech5AltPulseReleaseAt := 0
 }
 
 HoldTechnique5Space() {
@@ -588,11 +614,13 @@ ReleaseTechnique5Space() {
 }
 
 ResetTechnique5() {
-    global lastTech5AltAt
+    global tech5DueAt
+    global tech5Phase
 
     StopTechnique5AltPulse()
     ReleaseTechnique5Space()
-    lastTech5AltAt := 0
+    tech5Phase := "idle"
+    tech5DueAt := 0
 }
 
 AltDown() {
@@ -837,10 +865,10 @@ CheckTechnique4() {
 }
 
 CheckTechnique5() {
-    global lastTech5AltAt
     global tech5AltPulseActive
-    global tech5AltPulseReleaseAt
-    global tech5IntervalMs
+    global tech5DelaySec
+    global tech5DueAt
+    global tech5Phase
     global tech5TapHoldMs
 
     if !Technique5Held() || Technique4Held() {
@@ -848,19 +876,35 @@ CheckTechnique5() {
         return
     }
 
-    HoldTechnique5Space()
-
-    if tech5AltPulseActive {
-        if (A_TickCount >= tech5AltPulseReleaseAt)
+    switch tech5Phase {
+        case "idle":
+            StartTechnique5AltPulse(tech5TapHoldMs)
+            tech5Phase := "alt_down"
+            tech5DueAt := A_TickCount + tech5TapHoldMs
+        case "alt_down":
+            if (A_TickCount < tech5DueAt)
+                return
             StopTechnique5AltPulse()
-        return
+            tech5Phase := "wait_space"
+            tech5DueAt := A_TickCount + 70
+        case "wait_space":
+            if (A_TickCount < tech5DueAt)
+                return
+            HoldTechnique5Space()
+            tech5Phase := "space_down"
+            tech5DueAt := A_TickCount + tech5TapHoldMs
+        case "space_down":
+            if (A_TickCount < tech5DueAt)
+                return
+            ReleaseTechnique5Space()
+            tech5Phase := "loop_delay"
+            tech5DueAt := A_TickCount + Round(tech5DelaySec * 1000)
+        case "loop_delay":
+            if (A_TickCount < tech5DueAt)
+                return
+            tech5Phase := "idle"
+            tech5DueAt := 0
     }
-
-    if (A_TickCount - lastTech5AltAt < tech5IntervalMs)
-        return
-
-    StartTechnique5AltPulse(tech5TapHoldMs)
-    lastTech5AltAt := A_TickCount
 }
 
 CheckMeleeCancel() {
@@ -966,7 +1010,7 @@ WriteConfig(showNotice := true, syncControls := true) {
     global tech4Enabled
     global tech4Trigger
     global tech5Enabled
-    global tech5IntervalMs
+    global tech5DelaySec
     global tech5TapHoldMs
     global tech5Trigger
 
@@ -999,7 +1043,7 @@ WriteConfig(showNotice := true, syncControls := true) {
 
     IniWrite(tech5Enabled, configPath, "tech5", "enabled")
     IniWrite(tech5Trigger, configPath, "tech5", "trigger")
-    IniWrite(tech5IntervalMs, configPath, "tech5", "intervalMs")
+    IniWrite(tech5DelaySec, configPath, "tech5", "loopDelaySec")
     IniWrite(tech5TapHoldMs, configPath, "tech5", "tapHoldMs")
 
     if showNotice
@@ -1038,7 +1082,7 @@ ResetDefaults(*) {
 
     tech5EnabledCtrl.Value := defaultTech5Enabled
     tech5TriggerCtrl.Value := defaultTech5Trigger
-    tech5IntervalCtrl.Value := defaultTech5IntervalMs
+    tech5IntervalCtrl.Value := FormatDelaySec(defaultTech5DelaySec)
     tech5TapHoldCtrl.Value := defaultTech5TapHoldMs
 
     ApplyGuiToState(false)
