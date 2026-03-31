@@ -23,7 +23,7 @@ Techniques:
 - Technique 4 can also tap swap slot `1`, `2`, or `3`
 - Technique 5: Dry Fire Loop
 - Technique 5 default trigger is `XButton3`, or capture another key/button
-- Technique 5 holds `Space` and repeatedly taps `Alt` plus your currently held `W/A/S/D`
+- Technique 5 holds `Space` and repeatedly taps `Alt + A`
 
 Notes:
 
