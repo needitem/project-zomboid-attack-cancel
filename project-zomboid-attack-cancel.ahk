@@ -36,6 +36,7 @@ defaultTech4SwapEnabled := 0
 defaultTech4SwapSlot := 1
 
 defaultTech5Enabled := 1
+defaultTech5Trigger := "XButton3"
 defaultTech5IntervalMs := 50
 defaultTech5TapHoldMs := 10
 
@@ -61,6 +62,8 @@ lastTech5AltAt := 0
 tech5AltPulseActive := false
 tech5AltPulseReleaseAt := 0
 tech5SpaceHeld := false
+triggerCaptureTarget := ""
+triggerCaptureIgnoreMap := Map()
 
 appExe := IniRead(configPath, "general", "appExe", IniRead(configPath, "macro", "appExe", defaultAppExe))
 
@@ -92,6 +95,7 @@ tech4SwapEnabled := ParseBool(IniRead(configPath, "tech4", "swapEnabled", defaul
 tech4SwapSlot := ClampInt(ParseWhole(IniRead(configPath, "tech4", "swapSlot", defaultTech4SwapSlot), defaultTech4SwapSlot), 1, 3)
 
 tech5Enabled := ParseBool(IniRead(configPath, "tech5", "enabled", defaultTech5Enabled), defaultTech5Enabled)
+tech5Trigger := IniRead(configPath, "tech5", "trigger", defaultTech5Trigger)
 tech5IntervalMs := ClampInt(ParseWhole(IniRead(configPath, "tech5", "intervalMs", defaultTech5IntervalMs), defaultTech5IntervalMs), 20, 5000)
 tech5TapHoldMs := ClampInt(ParseWhole(IniRead(configPath, "tech5", "tapHoldMs", defaultTech5TapHoldMs), defaultTech5TapHoldMs), 1, 200)
 
@@ -132,8 +136,8 @@ chordEnabledCtrl.Value := chordEnabled
 macroGui.Add("Text", "xm y+6 w440", "Hold the Technique 3 trigger. The script repeatedly taps Alt + Space.")
 
 macroGui.Add("Text", "xm y+10", "Trigger button")
-chordTriggerCtrl := macroGui.Add("DropDownList", "xm w210", ["Thumb 1 (XButton1)", "Thumb 2 (XButton2)"])
-chordTriggerCtrl.Value := TriggerButtonIndex(chordTrigger)
+chordTriggerCtrl := macroGui.Add("Edit", "xm w150 ReadOnly", chordTrigger)
+chordSetTriggerButton := macroGui.Add("Button", "x+8 w95", "Set Trigger")
 
 macroGui.Add("Text", "xm y+10", "Interval (ms)")
 chordIntervalCtrl := macroGui.Add("Edit", "xm w90 Number", chordIntervalMs)
@@ -148,8 +152,8 @@ tech4EnabledCtrl.Value := tech4Enabled
 macroGui.Add("Text", "xm y+6 w440", "Hold the Technique 4 trigger. The script repeatedly taps Alt + Space. Swap can also tap 1, 2, or 3.")
 
 macroGui.Add("Text", "xm y+10", "Trigger button")
-tech4TriggerCtrl := macroGui.Add("DropDownList", "xm w210", ["Thumb 1 (XButton1)", "Thumb 2 (XButton2)"])
-tech4TriggerCtrl.Value := TriggerButtonIndex(tech4Trigger)
+tech4TriggerCtrl := macroGui.Add("Edit", "xm w150 ReadOnly", tech4Trigger)
+tech4SetTriggerButton := macroGui.Add("Button", "x+8 w95", "Set Trigger")
 
 tech4SwapEnabledCtrl := macroGui.Add("Checkbox", "x+14 yp+2", "Swap")
 tech4SwapEnabledCtrl.Value := tech4SwapEnabled
@@ -164,10 +168,14 @@ macroGui.Add("Text", "x+14 yp", "Swap slot")
 tech4SwapCtrl := macroGui.Add("Edit", "x+6 w60 Number Limit1", tech4SwapSlot)
 
 macroGui.Add("Text", "xm y+18", "Technique 5 - Hold Space + Tap Alt")
-tech5EnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 5 (hold Thumb 2 / XButton2)")
+tech5EnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 5")
 tech5EnabledCtrl.Value := tech5Enabled
 
-macroGui.Add("Text", "xm y+6 w440", "Hold Thumb 2 (XButton2). The script holds Space and taps Alt.")
+macroGui.Add("Text", "xm y+6 w440", "Default trigger is XButton3. If your mouse does not expose it, use Set Trigger and press another key or button.")
+
+macroGui.Add("Text", "xm y+10", "Trigger button")
+tech5TriggerCtrl := macroGui.Add("Edit", "xm w150 ReadOnly", tech5Trigger)
+tech5SetTriggerButton := macroGui.Add("Button", "x+8 w95", "Set Trigger")
 
 macroGui.Add("Text", "xm y+10", "Interval (ms)")
 tech5IntervalCtrl := macroGui.Add("Edit", "xm w90 Number", tech5IntervalMs)
@@ -182,7 +190,7 @@ resetButton := macroGui.Add("Button", "x+8 w110", "Reset Defaults")
 helpText := macroGui.Add(
     "Text",
     "xm y+14 w440",
-    "F8 start/stop, F9 exit. Technique 1 can use outline colors in windowed mode. Technique 3 repeats Alt + Space while its trigger is held. Technique 4 can also tap swap slot 1, 2, or 3. Technique 5 holds Space, taps Alt, and taps LButton while XButton2 is held."
+    "F8 start/stop, F9 exit. Technique 1 can use outline colors in windowed mode. Technique 3/4/5 triggers can be captured from the next key or mouse button you press."
 )
 
 meleeEnabledCtrl.OnEvent("Click", OnSettingsChanged)
@@ -192,16 +200,17 @@ meleeTapHoldCtrl.OnEvent("Change", OnSettingsChanged)
 meleeAttackLeadCtrl.OnEvent("Change", OnSettingsChanged)
 outlineEnabledCtrl.OnEvent("Click", OnSettingsChanged)
 chordEnabledCtrl.OnEvent("Click", OnSettingsChanged)
-chordTriggerCtrl.OnEvent("Change", OnSettingsChanged)
+chordSetTriggerButton.OnEvent("Click", BeginTriggerCapture.Bind("chord"))
 chordIntervalCtrl.OnEvent("Change", OnSettingsChanged)
 chordTapHoldCtrl.OnEvent("Change", OnSettingsChanged)
 tech4EnabledCtrl.OnEvent("Click", OnSettingsChanged)
-tech4TriggerCtrl.OnEvent("Change", OnSettingsChanged)
+tech4SetTriggerButton.OnEvent("Click", BeginTriggerCapture.Bind("tech4"))
 tech4SwapEnabledCtrl.OnEvent("Click", OnSettingsChanged)
 tech4IntervalCtrl.OnEvent("Change", OnSettingsChanged)
 tech4TapHoldCtrl.OnEvent("Change", OnSettingsChanged)
 tech4SwapCtrl.OnEvent("Change", OnSettingsChanged)
 tech5EnabledCtrl.OnEvent("Click", OnSettingsChanged)
+tech5SetTriggerButton.OnEvent("Click", BeginTriggerCapture.Bind("tech5"))
 tech5IntervalCtrl.OnEvent("Change", OnSettingsChanged)
 tech5TapHoldCtrl.OnEvent("Change", OnSettingsChanged)
 toggleButton.OnEvent("Click", ToggleMacro)
@@ -248,12 +257,89 @@ ClampInt(value, min, max) {
     return value
 }
 
-TriggerButtonIndex(buttonName) {
-    return (buttonName = "XButton2") ? 2 : 1
+TriggerIsPressed(keyName) {
+    if (keyName = "")
+        return false
+    try
+        return GetKeyState(keyName, "P")
+    catch
+        return false
 }
 
-TriggerButtonName(index) {
-    return (index = 2) ? "XButton2" : "XButton1"
+CaptureKeyList() {
+    keys := ["LButton", "RButton", "MButton", "XButton1", "XButton2", "XButton3"]
+    Loop 254 {
+        vkName := Format("vk{:02X}", A_Index)
+        keys.Push(vkName)
+    }
+    return keys
+}
+
+BeginTriggerCapture(target, *) {
+    global triggerCaptureIgnoreMap
+    global triggerCaptureTarget
+
+    triggerCaptureTarget := target
+    triggerCaptureIgnoreMap := Map()
+
+    for keyName in CaptureKeyList() {
+        if TriggerIsPressed(keyName)
+            triggerCaptureIgnoreMap[keyName] := true
+    }
+
+    Notify("Press a key or mouse button for Technique " ((target = "chord") ? "3" : (target = "tech4") ? "4" : "5"))
+    SetTimer(CaptureTriggerInput, 30)
+}
+
+CaptureTriggerInput() {
+    global triggerCaptureIgnoreMap
+    global triggerCaptureTarget
+
+    if (triggerCaptureTarget = "") {
+        SetTimer(CaptureTriggerInput, 0)
+        return
+    }
+
+    for keyName in CaptureKeyList() {
+        pressed := TriggerIsPressed(keyName)
+        known := triggerCaptureIgnoreMap.Has(keyName)
+
+        if pressed && !known {
+            SaveCapturedTrigger(triggerCaptureTarget, keyName)
+            return
+        }
+
+        if !pressed && known
+            triggerCaptureIgnoreMap.Delete(keyName)
+    }
+}
+
+SaveCapturedTrigger(target, keyName) {
+    global chordTrigger
+    global chordTriggerCtrl
+    global tech4Trigger
+    global tech4TriggerCtrl
+    global tech5Trigger
+    global tech5TriggerCtrl
+    global triggerCaptureIgnoreMap
+    global triggerCaptureTarget
+
+    switch target {
+        case "chord":
+            chordTrigger := keyName
+            chordTriggerCtrl.Value := keyName
+        case "tech4":
+            tech4Trigger := keyName
+            tech4TriggerCtrl.Value := keyName
+        case "tech5":
+            tech5Trigger := keyName
+            tech5TriggerCtrl.Value := keyName
+    }
+
+    triggerCaptureTarget := ""
+    triggerCaptureIgnoreMap := Map()
+    SetTimer(CaptureTriggerInput, 0)
+    Notify("Trigger set: " keyName)
 }
 
 ApplyGuiToState(showNotice := true, syncControls := true) {
@@ -296,6 +382,8 @@ ApplyGuiToState(showNotice := true, syncControls := true) {
     global tech5IntervalMs
     global tech5TapHoldCtrl
     global tech5TapHoldMs
+    global tech5Trigger
+    global tech5TriggerCtrl
 
     appExe := Trim(appExe)
     if (appExe = "") {
@@ -310,18 +398,17 @@ ApplyGuiToState(showNotice := true, syncControls := true) {
     outlineEnabled := outlineEnabledCtrl.Value
 
     chordEnabled := chordEnabledCtrl.Value
-    chordTrigger := TriggerButtonName(chordTriggerCtrl.Value)
     chordIntervalMs := ClampInt(ParseWhole(chordIntervalCtrl.Value, defaultChordIntervalMs), 20, 5000)
     chordTapHoldMs := ClampInt(ParseWhole(chordTapHoldCtrl.Value, defaultChordTapHoldMs), 1, 200)
 
     tech4Enabled := tech4EnabledCtrl.Value
-    tech4Trigger := TriggerButtonName(tech4TriggerCtrl.Value)
     tech4IntervalMs := ClampInt(ParseWhole(tech4IntervalCtrl.Value, defaultTech4IntervalMs), 20, 5000)
     tech4TapHoldMs := ClampInt(ParseWhole(tech4TapHoldCtrl.Value, defaultTech4TapHoldMs), 1, 200)
     tech4SwapEnabled := tech4SwapEnabledCtrl.Value
     tech4SwapSlot := ClampInt(ParseWhole(tech4SwapCtrl.Value, defaultTech4SwapSlot), 1, 3)
 
     tech5Enabled := tech5EnabledCtrl.Value
+    tech5Trigger := Trim(tech5TriggerCtrl.Value)
     tech5IntervalMs := ClampInt(ParseWhole(tech5IntervalCtrl.Value, defaultTech5IntervalMs), 20, 5000)
     tech5TapHoldMs := ClampInt(ParseWhole(tech5TapHoldCtrl.Value, defaultTech5TapHoldMs), 1, 200)
 
@@ -329,11 +416,14 @@ ApplyGuiToState(showNotice := true, syncControls := true) {
         meleeIntervalCtrl.Value := meleeIntervalMs
         meleeTapHoldCtrl.Value := meleeTapHoldMs
         meleeAttackLeadCtrl.Value := meleeAttackLeadMs
+        chordTriggerCtrl.Value := chordTrigger
         chordIntervalCtrl.Value := chordIntervalMs
         chordTapHoldCtrl.Value := chordTapHoldMs
+        tech4TriggerCtrl.Value := tech4Trigger
         tech4IntervalCtrl.Value := tech4IntervalMs
         tech4TapHoldCtrl.Value := tech4TapHoldMs
         tech4SwapCtrl.Value := tech4SwapSlot
+        tech5TriggerCtrl.Value := tech5Trigger
         tech5IntervalCtrl.Value := tech5IntervalMs
         tech5TapHoldCtrl.Value := tech5TapHoldMs
     }
@@ -366,6 +456,7 @@ UpdateGuiState() {
     global tech4Trigger
     global tech5Enabled
     global tech5IntervalMs
+    global tech5Trigger
     global toggleButton
 
     statusText.Text := "Status: " (enabled ? "ON" : "OFF")
@@ -375,7 +466,7 @@ UpdateGuiState() {
         . " => " chordIntervalMs " ms"
         . " | T4: " (tech4Enabled ? "ON" : "OFF") " " tech4Trigger " => " tech4IntervalMs " ms"
         . (tech4SwapEnabled ? " swap" tech4SwapSlot : "")
-        . " | T5: " (tech5Enabled ? "ON" : "OFF") " XButton2 => " tech5IntervalMs " ms"
+        . " | T5: " (tech5Enabled ? "ON" : "OFF") " " tech5Trigger " => " tech5IntervalMs " ms"
 
     hintText.Text := "T1 interval = " meleeIntervalMs " ms | T1 hold = " meleeTapHoldMs " ms"
         . " | T1 outline colors = 68F072 / 07FF0E"
@@ -627,7 +718,7 @@ Technique3Held() {
     if !enabled || !chordEnabled || !WinActive("ahk_exe " appExe)
         return false
 
-    if !GetKeyState(chordTrigger, "P")
+    if !TriggerIsPressed(chordTrigger)
         return false
 
     return true
@@ -642,18 +733,19 @@ Technique4Held() {
     if !enabled || !tech4Enabled || !WinActive("ahk_exe " appExe)
         return false
 
-    return GetKeyState(tech4Trigger, "P")
+    return TriggerIsPressed(tech4Trigger)
 }
 
 Technique5Held() {
     global appExe
     global enabled
     global tech5Enabled
+    global tech5Trigger
 
     if !enabled || !tech5Enabled || !WinActive("ahk_exe " appExe)
         return false
 
-    return GetKeyState("XButton2", "P")
+    return TriggerIsPressed(tech5Trigger)
 }
 
 CheckMacros() {
@@ -914,6 +1006,7 @@ SaveConfig(*) {
     global tech5Enabled
     global tech5IntervalMs
     global tech5TapHoldMs
+    global tech5Trigger
 
     ApplyGuiToState(false)
 
@@ -947,6 +1040,7 @@ SaveConfig(*) {
     IniWrite(tech4SwapSlot, configPath, "tech4", "swapSlot")
 
     IniWrite(tech5Enabled, configPath, "tech5", "enabled")
+    IniWrite(tech5Trigger, configPath, "tech5", "trigger")
     IniWrite(tech5IntervalMs, configPath, "tech5", "intervalMs")
     IniWrite(tech5TapHoldMs, configPath, "tech5", "tapHoldMs")
 
@@ -973,6 +1067,7 @@ ResetDefaults(*) {
     global tech5EnabledCtrl
     global tech5IntervalCtrl
     global tech5TapHoldCtrl
+    global tech5TriggerCtrl
 
     meleeEnabledCtrl.Value := defaultMeleeEnabled
     meleeModeCtrl.Value := 1
@@ -983,18 +1078,19 @@ ResetDefaults(*) {
     outlineEnabledCtrl.Value := defaultOutlineEnabled
 
     chordEnabledCtrl.Value := defaultChordEnabled
-    chordTriggerCtrl.Value := TriggerButtonIndex(defaultChordTrigger)
+    chordTriggerCtrl.Value := defaultChordTrigger
     chordIntervalCtrl.Value := defaultChordIntervalMs
     chordTapHoldCtrl.Value := defaultChordTapHoldMs
 
     tech4EnabledCtrl.Value := defaultTech4Enabled
-    tech4TriggerCtrl.Value := TriggerButtonIndex(defaultTech4Trigger)
+    tech4TriggerCtrl.Value := defaultTech4Trigger
     tech4IntervalCtrl.Value := defaultTech4IntervalMs
     tech4TapHoldCtrl.Value := defaultTech4TapHoldMs
     tech4SwapEnabledCtrl.Value := defaultTech4SwapEnabled
     tech4SwapCtrl.Value := defaultTech4SwapSlot
 
     tech5EnabledCtrl.Value := defaultTech5Enabled
+    tech5TriggerCtrl.Value := defaultTech5Trigger
     tech5IntervalCtrl.Value := defaultTech5IntervalMs
     tech5TapHoldCtrl.Value := defaultTech5TapHoldMs
 
