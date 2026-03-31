@@ -43,6 +43,7 @@ defaultTech5TapHoldMs := 10
 toggleKey := "F8"
 panicKey := "F9"
 pollMs := 5
+autoSaveDelayMs := 300
 
 enabled := false
 lastMeleeCancelAt := 0
@@ -228,6 +229,7 @@ Notify("Project Zomboid Attack Cancel ready")
 
 OnSettingsChanged(*) {
     ApplyGuiToState(false, false)
+    QueueAutoSave()
 }
 
 ParseWhole(value, fallback) {
@@ -340,6 +342,18 @@ SaveCapturedTrigger(target, keyName) {
     triggerCaptureIgnoreMap := Map()
     SetTimer(CaptureTriggerInput, 0)
     Notify("Trigger set: " keyName)
+    QueueAutoSave()
+}
+
+QueueAutoSave() {
+    global autoSaveDelayMs
+
+    SetTimer(SaveConfigSilently, 0)
+    SetTimer(SaveConfigSilently, -autoSaveDelayMs)
+}
+
+SaveConfigSilently() {
+    WriteConfig(false)
 }
 
 ApplyGuiToState(showNotice := true, syncControls := true) {
@@ -979,6 +993,10 @@ ToggleMacro(*) {
 }
 
 SaveConfig(*) {
+    WriteConfig(true)
+}
+
+WriteConfig(showNotice := true) {
     global appExe
     global chordEnabled
     global chordIntervalMs
@@ -1044,7 +1062,8 @@ SaveConfig(*) {
     IniWrite(tech5IntervalMs, configPath, "tech5", "intervalMs")
     IniWrite(tech5TapHoldMs, configPath, "tech5", "tapHoldMs")
 
-    Notify("Saved to project-zomboid-attack-cancel.ini")
+    if showNotice
+        Notify("Saved to project-zomboid-attack-cancel.ini")
 }
 
 ResetDefaults(*) {
@@ -1095,6 +1114,7 @@ ResetDefaults(*) {
     tech5TapHoldCtrl.Value := defaultTech5TapHoldMs
 
     ApplyGuiToState(false)
+    QueueAutoSave()
     Notify("Defaults restored")
 }
 
