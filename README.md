@@ -15,8 +15,6 @@ Main controls:
 Techniques:
 
 - Technique 1: Melee Cancel
-- Technique 1 can also use outline color trigger in windowed mode
-- Technique 1 outline colors are `68F072` and `07FF0E`
 - Technique 3: Forced Ground Attack
 - Technique 3 holds `Alt + Space`
 - Technique 4: Standing Knockdown
@@ -28,6 +26,5 @@ Techniques:
 Notes:
 
 - Settings are saved to `project-zomboid-attack-cancel.ini` next to the script.
-- Technique 1 outline trigger is based on PixelSearch and is intended for windowed mode.
 - The GitHub release includes a portable zip with `AutoHotkey64.exe` bundled.
 - Bundled AutoHotkey binaries remain subject to the AutoHotkey license.
