@@ -59,6 +59,7 @@ lastTech4PulseAt := 0
 tech4PulseActive := false
 tech4PulseReleaseAt := 0
 tech4SwapPulseKey := ""
+tech4Latched := false
 lastTech5AltAt := 0
 tech5AltPulseActive := false
 tech5AltPulseReleaseAt := 0
@@ -145,7 +146,7 @@ macroGui.Add("Text", "xm y+18", "Technique 4 - Standing Knockdown")
 tech4EnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 4")
 tech4EnabledCtrl.Value := tech4Enabled
 
-macroGui.Add("Text", "xm y+6 w440", "Hold the Technique 4 trigger. This drops standing zombies fast. Swap can also tap 1, 2, or 3.")
+macroGui.Add("Text", "xm y+6 w440", "Press the Technique 4 trigger while holding it. It fires once per press. Swap can also tap 1, 2, or 3.")
 
 macroGui.Add("Text", "xm y+10", "Trigger button")
 tech4TriggerCtrl := macroGui.Add("Edit", "xm w150 ReadOnly", tech4Trigger)
@@ -592,9 +593,11 @@ StopTechnique4Pulse() {
 
 ResetTechnique4Pulse() {
     global lastTech4PulseAt
+    global tech4Latched
 
     StopTechnique4Pulse()
     lastTech4PulseAt := 0
+    tech4Latched := false
 }
 
 StartTechnique5AltPulse(holdMs) {
@@ -869,8 +872,7 @@ CheckTechnique3() {
 }
 
 CheckTechnique4() {
-    global lastTech4PulseAt
-    global tech4IntervalMs
+    global tech4Latched
     global tech4PulseActive
     global tech4PulseReleaseAt
     global tech4SwapEnabled
@@ -888,11 +890,11 @@ CheckTechnique4() {
         return
     }
 
-    if (A_TickCount - lastTech4PulseAt < tech4IntervalMs)
+    if tech4Latched
         return
 
     StartTechnique4Pulse(tech4TapHoldMs, tech4SwapEnabled, tech4SwapSlot)
-    lastTech4PulseAt := A_TickCount
+    tech4Latched := true
 }
 
 CheckTechnique5() {

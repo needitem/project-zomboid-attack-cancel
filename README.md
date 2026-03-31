@@ -20,6 +20,7 @@ Techniques:
 - Technique 3: Forced Ground Attack
 - Technique 3 holds `Alt + Space`
 - Technique 4: Standing Knockdown
+- Technique 4 fires once per trigger press
 - Technique 4 can also tap swap slot `1`, `2`, or `3`
 - Technique 5: Dry Fire Loop
 - Technique 5 default trigger is `XButton3`, or capture another key/button
