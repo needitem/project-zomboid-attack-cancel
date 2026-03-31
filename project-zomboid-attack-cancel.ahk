@@ -27,8 +27,8 @@ defaultTech4SwapEnabled := 0
 defaultTech4SwapSlot := 1
 
 defaultTech5Enabled := 1
-defaultTech5IntervalMs := 110
-defaultTech5TapHoldMs := 18
+defaultTech5IntervalMs := 50
+defaultTech5TapHoldMs := 10
 
 toggleKey := "F8"
 panicKey := "F9"
