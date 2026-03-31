@@ -65,6 +65,7 @@ tech5AltPulseReleaseAt := 0
 tech5SpaceHeld := false
 triggerCaptureTarget := ""
 triggerCaptureIgnoreMap := Map()
+activeTriggerReleaseHotkeys := Map()
 
 appExe := IniRead(configPath, "general", "appExe", IniRead(configPath, "macro", "appExe", defaultAppExe))
 
@@ -333,6 +334,7 @@ SaveCapturedTrigger(target, keyName) {
     triggerCaptureTarget := ""
     triggerCaptureIgnoreMap := Map()
     SetTimer(CaptureTriggerInput, 0)
+    UpdateTriggerReleaseHotkeys()
     Notify("Trigger set: " keyName)
     QueueAutoSave()
 }
@@ -346,6 +348,43 @@ QueueAutoSave() {
 
 SaveConfigSilently() {
     WriteConfig(false, false)
+}
+
+TriggerReleaseHotkeyName(keyName) {
+    return "*" keyName " Up"
+}
+
+OnConfiguredTriggerReleased(*) {
+    ResetTechnique3Pulse()
+    ResetTechnique4Pulse()
+    ResetTechnique5()
+}
+
+UpdateTriggerReleaseHotkeys() {
+    global activeTriggerReleaseHotkeys
+    global chordTrigger
+    global tech4Trigger
+    global tech5Trigger
+
+    next := Map()
+    for _, keyName in [Trim(chordTrigger), Trim(tech4Trigger), Trim(tech5Trigger)] {
+        if (keyName != "")
+            next[keyName] := true
+    }
+
+    for keyName, _ in activeTriggerReleaseHotkeys {
+        if !next.Has(keyName) {
+            try Hotkey(TriggerReleaseHotkeyName(keyName), OnConfiguredTriggerReleased, "Off")
+        }
+    }
+
+    for keyName, _ in next {
+        if !activeTriggerReleaseHotkeys.Has(keyName) {
+            try Hotkey(TriggerReleaseHotkeyName(keyName), OnConfiguredTriggerReleased, "On")
+        }
+    }
+
+    activeTriggerReleaseHotkeys := next
 }
 
 ApplyGuiToState(showNotice := true, syncControls := true) {
@@ -429,6 +468,7 @@ ApplyGuiToState(showNotice := true, syncControls := true) {
     }
     meleeAttackLeadCtrl.Enabled := (meleeMode = "click_and_space")
     tech4SwapCtrl.Enabled := tech4SwapEnabled
+    UpdateTriggerReleaseHotkeys()
 
     UpdateGuiState()
 
