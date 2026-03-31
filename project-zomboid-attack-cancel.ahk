@@ -43,7 +43,7 @@ defaultTech5TapHoldMs := 10
 toggleKey := "F8"
 panicKey := "F9"
 pollMs := 5
-autoSaveDelayMs := 300
+autoSaveDelayMs := 800
 
 enabled := false
 lastMeleeCancelAt := 0
@@ -353,7 +353,7 @@ QueueAutoSave() {
 }
 
 SaveConfigSilently() {
-    WriteConfig(false)
+    WriteConfig(false, false)
 }
 
 ApplyGuiToState(showNotice := true, syncControls := true) {
@@ -993,10 +993,10 @@ ToggleMacro(*) {
 }
 
 SaveConfig(*) {
-    WriteConfig(true)
+    WriteConfig(true, true)
 }
 
-WriteConfig(showNotice := true) {
+WriteConfig(showNotice := true, syncControls := true) {
     global appExe
     global chordEnabled
     global chordIntervalMs
@@ -1026,7 +1026,7 @@ WriteConfig(showNotice := true) {
     global tech5TapHoldMs
     global tech5Trigger
 
-    ApplyGuiToState(false)
+    ApplyGuiToState(false, syncControls)
 
     IniWrite(appExe, configPath, "general", "appExe")
 
