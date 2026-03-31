@@ -58,7 +58,11 @@ chordPulseReleaseAt := 0
 lastTech4PulseAt := 0
 tech4PulseActive := false
 tech4PulseReleaseAt := 0
+tech4PulsePhase := ""
 tech4SwapPulseKey := ""
+tech4SwapKeyDown := false
+tech4SwapTapCount := 0
+tech4MinReleaseAt := 0
 tech4Latched := false
 lastTech5AltAt := 0
 tech5AltPulseActive := false
@@ -146,7 +150,7 @@ macroGui.Add("Text", "xm y+18", "Technique 4 - Standing Knockdown")
 tech4EnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 4")
 tech4EnabledCtrl.Value := tech4Enabled
 
-macroGui.Add("Text", "xm y+6 w440", "Press the Technique 4 trigger while holding it. It fires once per press. Swap can also tap 1, 2, or 3.")
+macroGui.Add("Text", "xm y+6 w440", "Press the Technique 4 trigger while holding it. It fires once per press. Swap taps slot 1, 2, or 3 twice with a fixed 10/50/10 timing.")
 
 macroGui.Add("Text", "xm y+10", "Trigger button")
 tech4TriggerCtrl := macroGui.Add("Edit", "xm w150 ReadOnly", tech4Trigger)
@@ -557,38 +561,105 @@ ResetTechnique3Pulse() {
 
 StartTechnique4Pulse(holdMs, swapEnabled, swapSlot) {
     global tech4PulseActive
+    global tech4PulsePhase
     global tech4PulseReleaseAt
+    global tech4MinReleaseAt
+    global tech4SwapKeyDown
     global tech4SwapPulseKey
+    global tech4SwapTapCount
 
     SendEvent("{Blind}{LAlt down}")
     SendEvent("{Blind}{Space down}")
+    tech4MinReleaseAt := A_TickCount + holdMs
     tech4SwapPulseKey := ""
+    tech4SwapKeyDown := false
+    tech4SwapTapCount := 0
     if swapEnabled {
         tech4SwapPulseKey := String(swapSlot)
         SendEvent("{Blind}{" tech4SwapPulseKey " down}")
+        tech4SwapKeyDown := true
+        tech4SwapTapCount := 1
+        tech4PulsePhase := "swap_down"
+        tech4PulseReleaseAt := A_TickCount + 10
+    } else {
+        tech4PulsePhase := "finish"
+        tech4PulseReleaseAt := tech4MinReleaseAt
     }
     tech4PulseActive := true
-    tech4PulseReleaseAt := A_TickCount + holdMs
+}
+
+AdvanceTechnique4Pulse() {
+    global tech4MinReleaseAt
+    global tech4PulseActive
+    global tech4PulsePhase
+    global tech4PulseReleaseAt
+    global tech4SwapKeyDown
+    global tech4SwapPulseKey
+    global tech4SwapTapCount
+
+    if !tech4PulseActive
+        return
+
+    switch tech4PulsePhase {
+        case "swap_down":
+            if (A_TickCount < tech4PulseReleaseAt)
+                return
+            if tech4SwapKeyDown {
+                SendEvent("{Blind}{" tech4SwapPulseKey " up}")
+                tech4SwapKeyDown := false
+            }
+            if (tech4SwapTapCount < 2) {
+                tech4PulsePhase := "swap_gap"
+                tech4PulseReleaseAt := A_TickCount + 50
+            } else {
+                tech4PulsePhase := "finish"
+                tech4PulseReleaseAt := Max(A_TickCount, tech4MinReleaseAt)
+            }
+        case "swap_gap":
+            if (A_TickCount < tech4PulseReleaseAt)
+                return
+        SendEvent("{Blind}{" tech4SwapPulseKey " down}")
+            tech4SwapKeyDown := true
+            tech4SwapTapCount += 1
+            tech4PulsePhase := "swap_down"
+            tech4PulseReleaseAt := A_TickCount + 10
+        case "finish":
+            if (A_TickCount < tech4PulseReleaseAt)
+                return
+            StopTechnique4Pulse()
+    }
 }
 
 StopTechnique4Pulse() {
     global tech4PulseActive
+    global tech4PulsePhase
     global tech4PulseReleaseAt
+    global tech4MinReleaseAt
+    global tech4SwapKeyDown
     global tech4SwapPulseKey
+    global tech4SwapTapCount
 
     if !tech4PulseActive {
+        tech4PulsePhase := ""
         tech4PulseReleaseAt := 0
+        tech4MinReleaseAt := 0
+        tech4SwapKeyDown := false
         tech4SwapPulseKey := ""
+        tech4SwapTapCount := 0
         return
     }
 
-    if (tech4SwapPulseKey != "")
+    if tech4SwapKeyDown
         SendEvent("{Blind}{" tech4SwapPulseKey " up}")
     SendEvent("{Blind}{Space up}")
     SendEvent("{Blind}{LAlt up}")
     tech4PulseActive := false
+    tech4PulsePhase := ""
     tech4PulseReleaseAt := 0
+    tech4MinReleaseAt := 0
+    tech4SwapKeyDown := false
     tech4SwapPulseKey := ""
+    tech4SwapTapCount := 0
 }
 
 ResetTechnique4Pulse() {
@@ -885,8 +956,7 @@ CheckTechnique4() {
     }
 
     if tech4PulseActive {
-        if (A_TickCount >= tech4PulseReleaseAt)
-            StopTechnique4Pulse()
+        AdvanceTechnique4Pulse()
         return
     }
 
