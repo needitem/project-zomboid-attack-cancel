@@ -172,7 +172,7 @@ macroGui.Add("Text", "xm y+18", "Technique 5 - Dry Fire Loop")
 tech5EnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 5")
 tech5EnabledCtrl.Value := tech5Enabled
 
-macroGui.Add("Text", "xm y+6 w440", "Default trigger is XButton3. This is the dry-fire style trigger. If your mouse does not expose it, use Set Trigger and press another key or button.")
+macroGui.Add("Text", "xm y+6 w440", "Default trigger is XButton3. Technique 5 holds Space and taps Alt. If your mouse does not expose it, use Set Trigger and press another key or button.")
 
 macroGui.Add("Text", "xm y+10", "Trigger button")
 tech5TriggerCtrl := macroGui.Add("Edit", "xm w150 ReadOnly", tech5Trigger)
@@ -191,7 +191,7 @@ resetButton := macroGui.Add("Button", "x+8 w110", "Reset Defaults")
 helpText := macroGui.Add(
     "Text",
     "xm y+14 w440",
-    "F8 start/stop, F9 exit. Technique 1 can use outline colors in windowed mode. Technique 3 is forced ground attack. Technique 4 is the standing-zombie knockdown. Technique 5 is the dry-fire trigger. Technique 3/4/5 triggers can be captured from the next key or mouse button you press."
+    "F8 start/stop, F9 exit. Technique 1 can use outline colors in windowed mode. Technique 3 is forced ground attack. Technique 4 is the standing-zombie knockdown. Technique 5 is the dry-fire loop and taps Alt while holding Space. Technique 3/4/5 triggers can be captured from the next key or mouse button you press."
 )
 
 meleeEnabledCtrl.OnEvent("Click", OnSettingsChanged)
@@ -583,7 +583,6 @@ StartTechnique5AltPulse(holdMs) {
     global tech5AltPulseActive
     global tech5AltPulseReleaseAt
 
-    SendEvent("{Blind}{LButton down}")
     SendEvent("{Blind}{LAlt down}")
     tech5AltPulseActive := true
     tech5AltPulseReleaseAt := A_TickCount + holdMs
@@ -599,7 +598,6 @@ StopTechnique5AltPulse() {
     }
 
     SendEvent("{Blind}{LAlt up}")
-    SendEvent("{Blind}{LButton up}")
     tech5AltPulseActive := false
     tech5AltPulseReleaseAt := 0
 }
