@@ -10,8 +10,8 @@ defaultAppExe := "ProjectZomboid64.exe"
 
 defaultMeleeEnabled := 1
 defaultMeleeMode := "space_only"
-defaultMeleeIntervalMs := 61
-defaultMeleeTapHoldMs := 1
+defaultMeleeIntervalMs := 110
+defaultMeleeTapHoldMs := 15
 defaultMeleeAttackLeadMs := 30
 
 defaultOutlineEnabled := 0
