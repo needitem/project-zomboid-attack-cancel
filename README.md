@@ -21,7 +21,7 @@ Techniques:
 - Technique 4 fires once per trigger press
 - Technique 5: Dry Fire Loop
 - Technique 5 default trigger is `XButton3`, or capture another key/button
-- Technique 5 holds `Space` and repeatedly taps `Alt + A`
+- Technique 5 holds `Space` and repeatedly taps `Alt`
 
 Notes:
 
