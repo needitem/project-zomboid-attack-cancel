@@ -28,7 +28,7 @@ defaultChordTrigger := "XButton1"
 defaultChordIntervalMs := 200
 defaultChordTapHoldMs := 18
 
-defaultTech4Enabled := 0
+defaultTech4Enabled := 1
 defaultTech4Trigger := "XButton2"
 defaultTech4IntervalMs := 200
 defaultTech4TapHoldMs := 18
@@ -120,11 +120,10 @@ meleeTapHoldCtrl := macroGui.Add("Edit", "x+6 w90 Number", meleeTapHoldMs)
 macroGui.Add("Text", "x+14 yp", "Click -> Space delay (ms)")
 meleeAttackLeadCtrl := macroGui.Add("Edit", "x+6 w90 Number", meleeAttackLeadMs)
 
-macroGui.Add("Text", "xm y+18", "Technique 2 - Outline Trigger")
-outlineEnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 2 (hold RMB, trigger on outline color)")
+outlineEnabledCtrl := macroGui.Add("Checkbox", "xm y+10", "Outline color trigger (hold RMB in windowed mode)")
 outlineEnabledCtrl.Value := outlineEnabled
 
-macroGui.Add("Text", "xm y+6 w440", "Windowed mode only. Aim Outline must be AnyWeapon. Colors: 68F072 and 07FF0E.")
+macroGui.Add("Text", "xm y+6 w440", "Aim Outline must be AnyWeapon. Colors: 68F072 and 07FF0E.")
 
 macroGui.Add("Text", "xm y+18", "Technique 3 - Repeating Alt + Space")
 chordEnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 3 (hold trigger to repeat Alt + Space)")
@@ -183,7 +182,7 @@ resetButton := macroGui.Add("Button", "x+8 w110", "Reset Defaults")
 helpText := macroGui.Add(
     "Text",
     "xm y+14 w440",
-    "F8 start/stop, F9 exit. Technique 2 uses outline colors in windowed mode. Technique 3 repeats Alt + Space while its trigger is held. Technique 4 can also tap swap slot 1, 2, or 3. Technique 5 holds Space and taps Alt while XButton2 is held."
+    "F8 start/stop, F9 exit. Technique 1 can use outline colors in windowed mode. Technique 3 repeats Alt + Space while its trigger is held. Technique 4 can also tap swap slot 1, 2, or 3. Technique 5 holds Space, taps Alt, and taps LButton while XButton2 is held."
 )
 
 meleeEnabledCtrl.OnEvent("Click", OnSettingsChanged)
@@ -371,7 +370,7 @@ UpdateGuiState() {
 
     statusText.Text := "Status: " (enabled ? "ON" : "OFF")
         . " | T1: " (meleeEnabled ? "ON" : "OFF") " " meleeIntervalMs " ms " ModeLabel(meleeMode)
-        . " | T2: " (outlineEnabled ? "ON" : "OFF")
+        . (outlineEnabled ? " outline" : "")
         . " | T3: " (chordEnabled ? "ON" : "OFF") " " chordTrigger
         . " => " chordIntervalMs " ms"
         . " | T4: " (tech4Enabled ? "ON" : "OFF") " " tech4Trigger " => " tech4IntervalMs " ms"
@@ -379,7 +378,7 @@ UpdateGuiState() {
         . " | T5: " (tech5Enabled ? "ON" : "OFF") " XButton2 => " tech5IntervalMs " ms"
 
     hintText.Text := "T1 interval = " meleeIntervalMs " ms | T1 hold = " meleeTapHoldMs " ms"
-        . " | T2 colors = 68F072 / 07FF0E"
+        . " | T1 outline colors = 68F072 / 07FF0E"
         . " | T3 interval = " chordIntervalMs " ms | T3 hold = " chordTapHoldMs " ms"
         . " | T4 interval = " tech4IntervalMs " ms | T4 hold = " tech4TapHoldMs " ms"
         . " | T5 interval = " tech5IntervalMs " ms"
@@ -479,6 +478,7 @@ StartTechnique5AltPulse(holdMs) {
     global tech5AltPulseActive
     global tech5AltPulseReleaseAt
 
+    SendEvent("{Blind}{LButton down}")
     SendEvent("{Blind}{LAlt down}")
     tech5AltPulseActive := true
     tech5AltPulseReleaseAt := A_TickCount + holdMs
@@ -494,6 +494,7 @@ StopTechnique5AltPulse() {
     }
 
     SendEvent("{Blind}{LAlt up}")
+    SendEvent("{Blind}{LButton up}")
     tech5AltPulseActive := false
     tech5AltPulseReleaseAt := 0
 }
