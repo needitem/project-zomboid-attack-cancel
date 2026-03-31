@@ -108,8 +108,8 @@ macroGui.SetFont("s9", "Segoe UI")
 statusText := macroGui.Add("Text", "xm w440", "")
 hintText := macroGui.Add("Text", "xm y+6 w440", "")
 
-macroGui.Add("Text", "xm y+16", "Technique 1 - Melee cancel")
-meleeEnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 1 (hold RMB + LButton)")
+macroGui.Add("Text", "xm y+16", "Technique 1 - 평타캔슬")
+meleeEnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 1")
 meleeEnabledCtrl.Value := meleeEnabled
 
 macroGui.Add("Text", "xm y+10", "Mode")
@@ -130,11 +130,11 @@ outlineEnabledCtrl.Value := outlineEnabled
 
 macroGui.Add("Text", "xm y+6 w440", "Aim Outline must be AnyWeapon. Colors: 68F072 and 07FF0E.")
 
-macroGui.Add("Text", "xm y+18", "Technique 3 - Repeating Alt + Space")
-chordEnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 3 (hold trigger to repeat Alt + Space)")
+macroGui.Add("Text", "xm y+18", "Technique 3 - 강제 바닥공격")
+chordEnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 3")
 chordEnabledCtrl.Value := chordEnabled
 
-macroGui.Add("Text", "xm y+6 w440", "Hold the Technique 3 trigger. The script repeatedly taps Alt + Space.")
+macroGui.Add("Text", "xm y+6 w440", "Hold the Technique 3 trigger. This forces ground attack by repeatedly tapping Alt + Space.")
 
 macroGui.Add("Text", "xm y+10", "Trigger button")
 chordTriggerCtrl := macroGui.Add("Edit", "xm w150 ReadOnly", chordTrigger)
@@ -146,11 +146,11 @@ chordIntervalCtrl := macroGui.Add("Edit", "xm w90 Number", chordIntervalMs)
 macroGui.Add("Text", "x+14 yp", "Tap hold (ms)")
 chordTapHoldCtrl := macroGui.Add("Edit", "x+6 w90 Number", chordTapHoldMs)
 
-macroGui.Add("Text", "xm y+18", "Technique 4 - Repeat Alt + Space")
+macroGui.Add("Text", "xm y+18", "Technique 4 - 서있는 좀비 한번에 눕히는거")
 tech4EnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 4")
 tech4EnabledCtrl.Value := tech4Enabled
 
-macroGui.Add("Text", "xm y+6 w440", "Hold the Technique 4 trigger. The script repeatedly taps Alt + Space. Swap can also tap 1, 2, or 3.")
+macroGui.Add("Text", "xm y+6 w440", "Hold the Technique 4 trigger. This drops standing zombies fast. Swap can also tap 1, 2, or 3.")
 
 macroGui.Add("Text", "xm y+10", "Trigger button")
 tech4TriggerCtrl := macroGui.Add("Edit", "xm w150 ReadOnly", tech4Trigger)
@@ -168,11 +168,11 @@ tech4TapHoldCtrl := macroGui.Add("Edit", "x+6 w90 Number", tech4TapHoldMs)
 macroGui.Add("Text", "x+14 yp", "Swap slot")
 tech4SwapCtrl := macroGui.Add("Edit", "x+6 w60 Number Limit1", tech4SwapSlot)
 
-macroGui.Add("Text", "xm y+18", "Technique 5 - Hold Space + Tap Alt")
+macroGui.Add("Text", "xm y+18", "Technique 5 - 빈총에서 격발되는거")
 tech5EnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 5")
 tech5EnabledCtrl.Value := tech5Enabled
 
-macroGui.Add("Text", "xm y+6 w440", "Default trigger is XButton3. If your mouse does not expose it, use Set Trigger and press another key or button.")
+macroGui.Add("Text", "xm y+6 w440", "Default trigger is XButton3. This is the dry-fire style trigger. If your mouse does not expose it, use Set Trigger and press another key or button.")
 
 macroGui.Add("Text", "xm y+10", "Trigger button")
 tech5TriggerCtrl := macroGui.Add("Edit", "xm w150 ReadOnly", tech5Trigger)
@@ -191,7 +191,7 @@ resetButton := macroGui.Add("Button", "x+8 w110", "Reset Defaults")
 helpText := macroGui.Add(
     "Text",
     "xm y+14 w440",
-    "F8 start/stop, F9 exit. Technique 1 can use outline colors in windowed mode. Technique 3/4/5 triggers can be captured from the next key or mouse button you press."
+    "F8 start/stop, F9 exit. Technique 1 can use outline colors in windowed mode. Technique 3 is forced ground attack. Technique 4 is the standing-zombie knockdown. Technique 5 is the dry-fire trigger. Technique 3/4/5 triggers can be captured from the next key or mouse button you press."
 )
 
 meleeEnabledCtrl.OnEvent("Click", OnSettingsChanged)

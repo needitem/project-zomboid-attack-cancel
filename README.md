@@ -14,14 +14,15 @@ Main controls:
 
 Techniques:
 
-- Technique 1: hold `RMB + LButton`
+- Technique 1: 평타캔슬
 - Technique 1 can also use outline color trigger in windowed mode
 - Technique 1 outline colors are `68F072` and `07FF0E`
-- Technique 3: hold the Technique 3 trigger
+- Technique 3: 강제 바닥공격
 - Technique 3 repeatedly taps `Alt + Space`
-- Technique 4: hold the Technique 4 trigger
+- Technique 4: 서있는 좀비 한번에 눕히는거
 - Technique 4 can also tap swap slot `1`, `2`, or `3`
-- Technique 5: default trigger is `XButton3`, or capture another key/button
+- Technique 5: 빈총에서 격발되는거
+- Technique 5 default trigger is `XButton3`, or capture another key/button
 - Technique 5 holds `Space` and repeatedly taps `Alt` and `LButton`
 
 Notes:
