@@ -30,10 +30,7 @@ defaultChordTapHoldMs := 18
 
 defaultTech4Enabled := 1
 defaultTech4Trigger := "XButton2"
-defaultTech4IntervalMs := 200
-defaultTech4TapHoldMs := 18
-defaultTech4SwapEnabled := 0
-defaultTech4SwapSlot := 1
+tech4PulseHoldMs := 18
 
 defaultTech5Enabled := 1
 defaultTech5Trigger := "XButton3"
@@ -55,14 +52,8 @@ outlineSequenceDueAt := 0
 lastChordPulseAt := 0
 chordPulseActive := false
 chordPulseReleaseAt := 0
-lastTech4PulseAt := 0
 tech4PulseActive := false
 tech4PulseReleaseAt := 0
-tech4PulsePhase := ""
-tech4SwapPulseKey := ""
-tech4SwapKeyDown := false
-tech4SwapTapCount := 0
-tech4MinReleaseAt := 0
 tech4Latched := false
 lastTech5AltAt := 0
 tech5AltPulseActive := false
@@ -96,10 +87,6 @@ chordTapHoldMs := ClampInt(ParseWhole(IniRead(configPath, "chord", "tapHoldMs", 
 
 tech4Enabled := ParseBool(IniRead(configPath, "tech4", "enabled", defaultTech4Enabled), defaultTech4Enabled)
 tech4Trigger := IniRead(configPath, "tech4", "trigger", defaultTech4Trigger)
-tech4IntervalMs := ClampInt(ParseWhole(IniRead(configPath, "tech4", "intervalMs", defaultTech4IntervalMs), defaultTech4IntervalMs), 20, 5000)
-tech4TapHoldMs := ClampInt(ParseWhole(IniRead(configPath, "tech4", "tapHoldMs", defaultTech4TapHoldMs), defaultTech4TapHoldMs), 1, 200)
-tech4SwapEnabled := ParseBool(IniRead(configPath, "tech4", "swapEnabled", defaultTech4SwapEnabled), defaultTech4SwapEnabled)
-tech4SwapSlot := ClampInt(ParseWhole(IniRead(configPath, "tech4", "swapSlot", defaultTech4SwapSlot), defaultTech4SwapSlot), 1, 3)
 
 tech5Enabled := ParseBool(IniRead(configPath, "tech5", "enabled", defaultTech5Enabled), defaultTech5Enabled)
 tech5Trigger := IniRead(configPath, "tech5", "trigger", defaultTech5Trigger)
@@ -150,23 +137,11 @@ macroGui.Add("Text", "xm y+18", "Technique 4 - Standing Knockdown")
 tech4EnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 4")
 tech4EnabledCtrl.Value := tech4Enabled
 
-macroGui.Add("Text", "xm y+6 w440", "Press the Technique 4 trigger while holding it. It fires once per press. Swap taps slot 1, 2, or 3 twice with a fixed 10/50/10 timing.")
+macroGui.Add("Text", "xm y+6 w440", "Press the Technique 4 trigger. It fires once per press.")
 
 macroGui.Add("Text", "xm y+10", "Trigger button")
 tech4TriggerCtrl := macroGui.Add("Edit", "xm w150 ReadOnly", tech4Trigger)
 tech4SetTriggerButton := macroGui.Add("Button", "x+8 w95", "Set Trigger")
-
-tech4SwapEnabledCtrl := macroGui.Add("Checkbox", "x+14 yp+2", "Swap")
-tech4SwapEnabledCtrl.Value := tech4SwapEnabled
-
-macroGui.Add("Text", "xm y+10", "Interval (ms)")
-tech4IntervalCtrl := macroGui.Add("Edit", "xm w90 Number", tech4IntervalMs)
-
-macroGui.Add("Text", "x+14 yp", "Tap hold (ms)")
-tech4TapHoldCtrl := macroGui.Add("Edit", "x+6 w90 Number", tech4TapHoldMs)
-
-macroGui.Add("Text", "x+14 yp", "Swap slot")
-tech4SwapCtrl := macroGui.Add("Edit", "x+6 w60 Number Limit1", tech4SwapSlot)
 
 macroGui.Add("Text", "xm y+18", "Technique 5 - Dry Fire Loop")
 tech5EnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 5")
@@ -204,10 +179,6 @@ chordEnabledCtrl.OnEvent("Click", OnSettingsChanged)
 chordSetTriggerButton.OnEvent("Click", BeginTriggerCapture.Bind("chord"))
 tech4EnabledCtrl.OnEvent("Click", OnSettingsChanged)
 tech4SetTriggerButton.OnEvent("Click", BeginTriggerCapture.Bind("tech4"))
-tech4SwapEnabledCtrl.OnEvent("Click", OnSettingsChanged)
-tech4IntervalCtrl.OnEvent("Change", OnSettingsChanged)
-tech4TapHoldCtrl.OnEvent("Change", OnSettingsChanged)
-tech4SwapCtrl.OnEvent("Change", OnSettingsChanged)
 tech5EnabledCtrl.OnEvent("Click", OnSettingsChanged)
 tech5SetTriggerButton.OnEvent("Click", BeginTriggerCapture.Bind("tech5"))
 tech5IntervalCtrl.OnEvent("Change", OnSettingsChanged)
@@ -414,14 +385,6 @@ ApplyGuiToState(showNotice := true, syncControls := true) {
     global meleeTapHoldMs
     global tech4Enabled
     global tech4EnabledCtrl
-    global tech4IntervalCtrl
-    global tech4IntervalMs
-    global tech4SwapCtrl
-    global tech4SwapEnabled
-    global tech4SwapEnabledCtrl
-    global tech4SwapSlot
-    global tech4TapHoldCtrl
-    global tech4TapHoldMs
     global tech4Trigger
     global tech4TriggerCtrl
     global tech5Enabled
@@ -448,10 +411,6 @@ ApplyGuiToState(showNotice := true, syncControls := true) {
     chordEnabled := chordEnabledCtrl.Value
 
     tech4Enabled := tech4EnabledCtrl.Value
-    tech4IntervalMs := ClampInt(ParseWhole(tech4IntervalCtrl.Value, defaultTech4IntervalMs), 20, 5000)
-    tech4TapHoldMs := ClampInt(ParseWhole(tech4TapHoldCtrl.Value, defaultTech4TapHoldMs), 1, 200)
-    tech4SwapEnabled := tech4SwapEnabledCtrl.Value
-    tech4SwapSlot := ClampInt(ParseWhole(tech4SwapCtrl.Value, defaultTech4SwapSlot), 1, 3)
 
     tech5Enabled := tech5EnabledCtrl.Value
     tech5Trigger := Trim(tech5TriggerCtrl.Value)
@@ -464,15 +423,11 @@ ApplyGuiToState(showNotice := true, syncControls := true) {
         meleeAttackLeadCtrl.Value := meleeAttackLeadMs
         chordTriggerCtrl.Value := chordTrigger
         tech4TriggerCtrl.Value := tech4Trigger
-        tech4IntervalCtrl.Value := tech4IntervalMs
-        tech4TapHoldCtrl.Value := tech4TapHoldMs
-        tech4SwapCtrl.Value := tech4SwapSlot
         tech5TriggerCtrl.Value := tech5Trigger
         tech5IntervalCtrl.Value := tech5IntervalMs
         tech5TapHoldCtrl.Value := tech5TapHoldMs
     }
     meleeAttackLeadCtrl.Enabled := (meleeMode = "click_and_space")
-    tech4SwapCtrl.Enabled := tech4SwapEnabled
     UpdateTriggerReleaseHotkeys()
 
     UpdateGuiState()
@@ -492,10 +447,6 @@ UpdateGuiState() {
     global outlineEnabled
     global statusText
     global tech4Enabled
-    global tech4IntervalMs
-    global tech4SwapEnabled
-    global tech4SwapSlot
-    global tech4TapHoldMs
     global tech4Trigger
     global tech5Enabled
     global tech5IntervalMs
@@ -506,14 +457,13 @@ UpdateGuiState() {
         . " | T1: " (meleeEnabled ? "ON" : "OFF") " " meleeIntervalMs " ms " ModeLabel(meleeMode)
         . (outlineEnabled ? " outline" : "")
         . " | T3: " (chordEnabled ? "ON" : "OFF") " " chordTrigger " hold"
-        . " | T4: " (tech4Enabled ? "ON" : "OFF") " " tech4Trigger " => " tech4IntervalMs " ms"
-        . (tech4SwapEnabled ? " swap" tech4SwapSlot : "")
+        . " | T4: " (tech4Enabled ? "ON" : "OFF") " " tech4Trigger " one-shot"
         . " | T5: " (tech5Enabled ? "ON" : "OFF") " " tech5Trigger " => " tech5IntervalMs " ms"
 
     hintText.Text := "T1 interval = " meleeIntervalMs " ms | T1 hold = " meleeTapHoldMs " ms"
         . " | T1 outline colors = 68F072 / 07FF0E"
         . " | T3 = hold Alt + Space"
-        . " | T4 interval = " tech4IntervalMs " ms | T4 hold = " tech4TapHoldMs " ms"
+        . " | T4 = one-shot Alt + Space"
         . " | T5 interval = " tech5IntervalMs " ms"
 
     toggleButton.Text := enabled ? "Stop (F8)" : "Start (F8)"
@@ -559,115 +509,36 @@ ResetTechnique3Pulse() {
     StopTechnique3Pulse()
 }
 
-StartTechnique4Pulse(holdMs, swapEnabled, swapSlot) {
+StartTechnique4Pulse(holdMs) {
     global tech4PulseActive
-    global tech4PulsePhase
     global tech4PulseReleaseAt
-    global tech4MinReleaseAt
-    global tech4SwapKeyDown
-    global tech4SwapPulseKey
-    global tech4SwapTapCount
 
     SendEvent("{Blind}{LAlt down}")
     SendEvent("{Blind}{Space down}")
-    tech4MinReleaseAt := A_TickCount + holdMs
-    tech4SwapPulseKey := ""
-    tech4SwapKeyDown := false
-    tech4SwapTapCount := 0
-    if swapEnabled {
-        tech4SwapPulseKey := String(swapSlot)
-        SendEvent("{Blind}{" tech4SwapPulseKey " down}")
-        tech4SwapKeyDown := true
-        tech4SwapTapCount := 1
-        tech4PulsePhase := "swap_down"
-        tech4PulseReleaseAt := A_TickCount + 10
-    } else {
-        tech4PulsePhase := "finish"
-        tech4PulseReleaseAt := tech4MinReleaseAt
-    }
     tech4PulseActive := true
-}
-
-AdvanceTechnique4Pulse() {
-    global tech4MinReleaseAt
-    global tech4PulseActive
-    global tech4PulsePhase
     global tech4PulseReleaseAt
-    global tech4SwapKeyDown
-    global tech4SwapPulseKey
-    global tech4SwapTapCount
-
-    if !tech4PulseActive
-        return
-
-    switch tech4PulsePhase {
-        case "swap_down":
-            if (A_TickCount < tech4PulseReleaseAt)
-                return
-            if tech4SwapKeyDown {
-                SendEvent("{Blind}{" tech4SwapPulseKey " up}")
-                tech4SwapKeyDown := false
-            }
-            if (tech4SwapTapCount < 2) {
-                tech4PulsePhase := "swap_gap"
-                tech4PulseReleaseAt := A_TickCount + 50
-            } else {
-                tech4PulsePhase := "finish"
-                tech4PulseReleaseAt := Max(A_TickCount, tech4MinReleaseAt)
-            }
-        case "swap_gap":
-            if (A_TickCount < tech4PulseReleaseAt)
-                return
-        SendEvent("{Blind}{" tech4SwapPulseKey " down}")
-            tech4SwapKeyDown := true
-            tech4SwapTapCount += 1
-            tech4PulsePhase := "swap_down"
-            tech4PulseReleaseAt := A_TickCount + 10
-        case "finish":
-            if (A_TickCount < tech4PulseReleaseAt)
-                return
-            StopTechnique4Pulse()
-    }
+    tech4PulseReleaseAt := A_TickCount + holdMs
 }
 
 StopTechnique4Pulse() {
     global tech4PulseActive
-    global tech4PulsePhase
     global tech4PulseReleaseAt
-    global tech4MinReleaseAt
-    global tech4SwapKeyDown
-    global tech4SwapPulseKey
-    global tech4SwapTapCount
 
     if !tech4PulseActive {
-        tech4PulsePhase := ""
         tech4PulseReleaseAt := 0
-        tech4MinReleaseAt := 0
-        tech4SwapKeyDown := false
-        tech4SwapPulseKey := ""
-        tech4SwapTapCount := 0
         return
     }
 
-    if tech4SwapKeyDown
-        SendEvent("{Blind}{" tech4SwapPulseKey " up}")
     SendEvent("{Blind}{Space up}")
     SendEvent("{Blind}{LAlt up}")
     tech4PulseActive := false
-    tech4PulsePhase := ""
     tech4PulseReleaseAt := 0
-    tech4MinReleaseAt := 0
-    tech4SwapKeyDown := false
-    tech4SwapPulseKey := ""
-    tech4SwapTapCount := 0
 }
 
 ResetTechnique4Pulse() {
-    global lastTech4PulseAt
     global tech4Latched
 
     StopTechnique4Pulse()
-    lastTech4PulseAt := 0
     tech4Latched := false
 }
 
@@ -946,9 +817,6 @@ CheckTechnique4() {
     global tech4Latched
     global tech4PulseActive
     global tech4PulseReleaseAt
-    global tech4SwapEnabled
-    global tech4SwapSlot
-    global tech4TapHoldMs
 
     if !Technique4Held() {
         ResetTechnique4Pulse()
@@ -956,14 +824,15 @@ CheckTechnique4() {
     }
 
     if tech4PulseActive {
-        AdvanceTechnique4Pulse()
+        if (A_TickCount >= tech4PulseReleaseAt)
+            StopTechnique4Pulse()
         return
     }
 
     if tech4Latched
         return
 
-    StartTechnique4Pulse(tech4TapHoldMs, tech4SwapEnabled, tech4SwapSlot)
+    StartTechnique4Pulse(tech4PulseHoldMs)
     tech4Latched := true
 }
 
@@ -1095,10 +964,6 @@ WriteConfig(showNotice := true, syncControls := true) {
     global outlineTapHoldMs
     global outlineVariation
     global tech4Enabled
-    global tech4IntervalMs
-    global tech4SwapEnabled
-    global tech4SwapSlot
-    global tech4TapHoldMs
     global tech4Trigger
     global tech5Enabled
     global tech5IntervalMs
@@ -1131,10 +996,6 @@ WriteConfig(showNotice := true, syncControls := true) {
 
     IniWrite(tech4Enabled, configPath, "tech4", "enabled")
     IniWrite(tech4Trigger, configPath, "tech4", "trigger")
-    IniWrite(tech4IntervalMs, configPath, "tech4", "intervalMs")
-    IniWrite(tech4TapHoldMs, configPath, "tech4", "tapHoldMs")
-    IniWrite(tech4SwapEnabled, configPath, "tech4", "swapEnabled")
-    IniWrite(tech4SwapSlot, configPath, "tech4", "swapSlot")
 
     IniWrite(tech5Enabled, configPath, "tech5", "enabled")
     IniWrite(tech5Trigger, configPath, "tech5", "trigger")
@@ -1155,10 +1016,6 @@ ResetDefaults(*) {
     global meleeTapHoldCtrl
     global outlineEnabledCtrl
     global tech4EnabledCtrl
-    global tech4IntervalCtrl
-    global tech4SwapCtrl
-    global tech4SwapEnabledCtrl
-    global tech4TapHoldCtrl
     global tech4TriggerCtrl
     global tech5EnabledCtrl
     global tech5IntervalCtrl
@@ -1178,10 +1035,6 @@ ResetDefaults(*) {
 
     tech4EnabledCtrl.Value := defaultTech4Enabled
     tech4TriggerCtrl.Value := defaultTech4Trigger
-    tech4IntervalCtrl.Value := defaultTech4IntervalMs
-    tech4TapHoldCtrl.Value := defaultTech4TapHoldMs
-    tech4SwapEnabledCtrl.Value := defaultTech4SwapEnabled
-    tech4SwapCtrl.Value := defaultTech4SwapSlot
 
     tech5EnabledCtrl.Value := defaultTech5Enabled
     tech5TriggerCtrl.Value := defaultTech5Trigger
