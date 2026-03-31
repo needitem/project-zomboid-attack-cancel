@@ -108,7 +108,7 @@ macroGui.SetFont("s9", "Segoe UI")
 statusText := macroGui.Add("Text", "xm w440", "")
 hintText := macroGui.Add("Text", "xm y+6 w440", "")
 
-macroGui.Add("Text", "xm y+16", "Technique 1 - 평타캔슬")
+macroGui.Add("Text", "xm y+16", "Technique 1 - Melee Cancel")
 meleeEnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 1")
 meleeEnabledCtrl.Value := meleeEnabled
 
@@ -130,7 +130,7 @@ outlineEnabledCtrl.Value := outlineEnabled
 
 macroGui.Add("Text", "xm y+6 w440", "Aim Outline must be AnyWeapon. Colors: 68F072 and 07FF0E.")
 
-macroGui.Add("Text", "xm y+18", "Technique 3 - 강제 바닥공격")
+macroGui.Add("Text", "xm y+18", "Technique 3 - Forced Ground Attack")
 chordEnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 3")
 chordEnabledCtrl.Value := chordEnabled
 
@@ -146,7 +146,7 @@ chordIntervalCtrl := macroGui.Add("Edit", "xm w90 Number", chordIntervalMs)
 macroGui.Add("Text", "x+14 yp", "Tap hold (ms)")
 chordTapHoldCtrl := macroGui.Add("Edit", "x+6 w90 Number", chordTapHoldMs)
 
-macroGui.Add("Text", "xm y+18", "Technique 4 - 서있는 좀비 한번에 눕히는거")
+macroGui.Add("Text", "xm y+18", "Technique 4 - Standing Knockdown")
 tech4EnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 4")
 tech4EnabledCtrl.Value := tech4Enabled
 
@@ -168,7 +168,7 @@ tech4TapHoldCtrl := macroGui.Add("Edit", "x+6 w90 Number", tech4TapHoldMs)
 macroGui.Add("Text", "x+14 yp", "Swap slot")
 tech4SwapCtrl := macroGui.Add("Edit", "x+6 w60 Number Limit1", tech4SwapSlot)
 
-macroGui.Add("Text", "xm y+18", "Technique 5 - 빈총에서 격발되는거")
+macroGui.Add("Text", "xm y+18", "Technique 5 - Dry Fire Loop")
 tech5EnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 5")
 tech5EnabledCtrl.Value := tech5Enabled
 
