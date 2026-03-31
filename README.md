@@ -10,8 +10,6 @@ Included:
 Main controls:
 
 - `F8`: start/stop
-- `F10`: faster
-- `F11`: slower
 - `F9`: exit
 
 Techniques:
@@ -19,6 +17,8 @@ Techniques:
 - Technique 1: hold `RMB + LButton`
 - Technique 3: hold the Technique 3 trigger
 - Technique 3 repeatedly taps `Alt + Space`
+- Technique 4: hold the Technique 4 trigger
+- Technique 4 can also tap swap slot `1`, `2`, or `3`
 - Technique 5: hold `Thumb 2 / XButton2`
 - Technique 5 holds `Space` and repeatedly taps `Alt`
 
