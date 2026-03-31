@@ -10,9 +10,18 @@ defaultAppExe := "ProjectZomboid64.exe"
 
 defaultMeleeEnabled := 1
 defaultMeleeMode := "space_only"
-defaultMeleeIntervalMs := 110
-defaultMeleeTapHoldMs := 18
-defaultMeleeAttackLeadMs := 25
+defaultMeleeIntervalMs := 61
+defaultMeleeTapHoldMs := 1
+defaultMeleeAttackLeadMs := 30
+
+defaultOutlineEnabled := 0
+defaultOutlineVariation := 30
+defaultOutlinePrimaryColor := 0x68F072
+defaultOutlineSecondaryColor := 0x07FF0E
+defaultOutlineAttackLeadMs := 30
+defaultOutlineTapHoldMs := 1
+defaultOutlinePrimaryCooldownMs := 65
+defaultOutlineSecondaryCooldownMs := 0
 
 defaultChordEnabled := 1
 defaultChordTrigger := "XButton1"
@@ -38,6 +47,9 @@ enabled := false
 lastMeleeCancelAt := 0
 meleeSequencePhase := "idle"
 meleeSequenceDueAt := 0
+outlineSequenceCooldownMs := 0
+outlineSequencePhase := "idle"
+outlineSequenceDueAt := 0
 lastChordPulseAt := 0
 chordPulseActive := false
 chordPulseReleaseAt := 0
@@ -55,24 +67,33 @@ appExe := IniRead(configPath, "general", "appExe", IniRead(configPath, "macro", 
 meleeEnabled := ParseBool(IniRead(configPath, "melee", "enabled", defaultMeleeEnabled), defaultMeleeEnabled)
 meleeMode := IniRead(configPath, "melee", "mode", IniRead(configPath, "macro", "mode", defaultMeleeMode))
 meleeIntervalMs := ClampInt(ParseWhole(IniRead(configPath, "melee", "intervalMs", IniRead(configPath, "macro", "cancelIntervalMs", defaultMeleeIntervalMs)), defaultMeleeIntervalMs), 40, 5000)
-meleeTapHoldMs := ClampInt(ParseWhole(IniRead(configPath, "melee", "tapHoldMs", IniRead(configPath, "macro", "tapHoldMs", defaultMeleeTapHoldMs)), defaultMeleeTapHoldMs), 5, 200)
+meleeTapHoldMs := ClampInt(ParseWhole(IniRead(configPath, "melee", "tapHoldMs", IniRead(configPath, "macro", "tapHoldMs", defaultMeleeTapHoldMs)), defaultMeleeTapHoldMs), 1, 200)
 meleeAttackLeadMs := ClampInt(ParseWhole(IniRead(configPath, "melee", "attackLeadMs", IniRead(configPath, "macro", "attackLeadMs", defaultMeleeAttackLeadMs)), defaultMeleeAttackLeadMs), 0, 200)
+
+outlineEnabled := ParseBool(IniRead(configPath, "outline", "enabled", defaultOutlineEnabled), defaultOutlineEnabled)
+outlineVariation := ClampInt(ParseWhole(IniRead(configPath, "outline", "variation", defaultOutlineVariation), defaultOutlineVariation), 0, 255)
+outlinePrimaryColor := ClampInt(ParseWhole(IniRead(configPath, "outline", "primaryColor", defaultOutlinePrimaryColor), defaultOutlinePrimaryColor), 0, 0xFFFFFF)
+outlineSecondaryColor := ClampInt(ParseWhole(IniRead(configPath, "outline", "secondaryColor", defaultOutlineSecondaryColor), defaultOutlineSecondaryColor), 0, 0xFFFFFF)
+outlineAttackLeadMs := ClampInt(ParseWhole(IniRead(configPath, "outline", "attackLeadMs", defaultOutlineAttackLeadMs), defaultOutlineAttackLeadMs), 0, 200)
+outlineTapHoldMs := ClampInt(ParseWhole(IniRead(configPath, "outline", "tapHoldMs", defaultOutlineTapHoldMs), defaultOutlineTapHoldMs), 1, 200)
+outlinePrimaryCooldownMs := ClampInt(ParseWhole(IniRead(configPath, "outline", "primaryCooldownMs", defaultOutlinePrimaryCooldownMs), defaultOutlinePrimaryCooldownMs), 0, 5000)
+outlineSecondaryCooldownMs := ClampInt(ParseWhole(IniRead(configPath, "outline", "secondaryCooldownMs", defaultOutlineSecondaryCooldownMs), defaultOutlineSecondaryCooldownMs), 0, 5000)
 
 chordEnabled := ParseBool(IniRead(configPath, "chord", "enabled", defaultChordEnabled), defaultChordEnabled)
 chordTrigger := IniRead(configPath, "chord", "trigger", defaultChordTrigger)
 chordIntervalMs := ClampInt(ParseWhole(IniRead(configPath, "chord", "intervalMs", defaultChordIntervalMs), defaultChordIntervalMs), 20, 5000)
-chordTapHoldMs := ClampInt(ParseWhole(IniRead(configPath, "chord", "tapHoldMs", defaultChordTapHoldMs), defaultChordTapHoldMs), 5, 200)
+chordTapHoldMs := ClampInt(ParseWhole(IniRead(configPath, "chord", "tapHoldMs", defaultChordTapHoldMs), defaultChordTapHoldMs), 1, 200)
 
 tech4Enabled := ParseBool(IniRead(configPath, "tech4", "enabled", defaultTech4Enabled), defaultTech4Enabled)
 tech4Trigger := IniRead(configPath, "tech4", "trigger", defaultTech4Trigger)
 tech4IntervalMs := ClampInt(ParseWhole(IniRead(configPath, "tech4", "intervalMs", defaultTech4IntervalMs), defaultTech4IntervalMs), 20, 5000)
-tech4TapHoldMs := ClampInt(ParseWhole(IniRead(configPath, "tech4", "tapHoldMs", defaultTech4TapHoldMs), defaultTech4TapHoldMs), 5, 200)
+tech4TapHoldMs := ClampInt(ParseWhole(IniRead(configPath, "tech4", "tapHoldMs", defaultTech4TapHoldMs), defaultTech4TapHoldMs), 1, 200)
 tech4SwapEnabled := ParseBool(IniRead(configPath, "tech4", "swapEnabled", defaultTech4SwapEnabled), defaultTech4SwapEnabled)
 tech4SwapSlot := ClampInt(ParseWhole(IniRead(configPath, "tech4", "swapSlot", defaultTech4SwapSlot), defaultTech4SwapSlot), 1, 3)
 
 tech5Enabled := ParseBool(IniRead(configPath, "tech5", "enabled", defaultTech5Enabled), defaultTech5Enabled)
 tech5IntervalMs := ClampInt(ParseWhole(IniRead(configPath, "tech5", "intervalMs", defaultTech5IntervalMs), defaultTech5IntervalMs), 20, 5000)
-tech5TapHoldMs := ClampInt(ParseWhole(IniRead(configPath, "tech5", "tapHoldMs", defaultTech5TapHoldMs), defaultTech5TapHoldMs), 5, 200)
+tech5TapHoldMs := ClampInt(ParseWhole(IniRead(configPath, "tech5", "tapHoldMs", defaultTech5TapHoldMs), defaultTech5TapHoldMs), 1, 200)
 
 macroGui := Gui("+AlwaysOnTop", "Project Zomboid Attack Cancel")
 macroGui.MarginX := 12
@@ -98,6 +119,12 @@ meleeTapHoldCtrl := macroGui.Add("Edit", "x+6 w90 Number", meleeTapHoldMs)
 
 macroGui.Add("Text", "x+14 yp", "Click -> Space delay (ms)")
 meleeAttackLeadCtrl := macroGui.Add("Edit", "x+6 w90 Number", meleeAttackLeadMs)
+
+macroGui.Add("Text", "xm y+18", "Technique 2 - Outline Trigger")
+outlineEnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 2 (hold RMB, trigger on outline color)")
+outlineEnabledCtrl.Value := outlineEnabled
+
+macroGui.Add("Text", "xm y+6 w440", "Windowed mode only. Aim Outline must be AnyWeapon. Colors: 68F072 and 07FF0E.")
 
 macroGui.Add("Text", "xm y+18", "Technique 3 - Repeating Alt + Space")
 chordEnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 3 (hold trigger to repeat Alt + Space)")
@@ -156,7 +183,7 @@ resetButton := macroGui.Add("Button", "x+8 w110", "Reset Defaults")
 helpText := macroGui.Add(
     "Text",
     "xm y+14 w440",
-    "F8 start/stop, F9 exit. Technique 3 repeats Alt + Space while its trigger is held. Technique 4 can also tap swap slot 1, 2, or 3. Technique 5 holds Space and taps Alt while XButton2 is held."
+    "F8 start/stop, F9 exit. Technique 2 uses outline colors in windowed mode. Technique 3 repeats Alt + Space while its trigger is held. Technique 4 can also tap swap slot 1, 2, or 3. Technique 5 holds Space and taps Alt while XButton2 is held."
 )
 
 meleeEnabledCtrl.OnEvent("Click", OnSettingsChanged)
@@ -164,6 +191,7 @@ meleeModeCtrl.OnEvent("Change", OnSettingsChanged)
 meleeIntervalCtrl.OnEvent("Change", OnSettingsChanged)
 meleeTapHoldCtrl.OnEvent("Change", OnSettingsChanged)
 meleeAttackLeadCtrl.OnEvent("Change", OnSettingsChanged)
+outlineEnabledCtrl.OnEvent("Click", OnSettingsChanged)
 chordEnabledCtrl.OnEvent("Click", OnSettingsChanged)
 chordTriggerCtrl.OnEvent("Change", OnSettingsChanged)
 chordIntervalCtrl.OnEvent("Change", OnSettingsChanged)
@@ -247,6 +275,8 @@ ApplyGuiToState(showNotice := true, syncControls := true) {
     global meleeIntervalMs
     global meleeMode
     global meleeModeCtrl
+    global outlineEnabled
+    global outlineEnabledCtrl
     global meleeTapHoldCtrl
     global meleeTapHoldMs
     global tech4Enabled
@@ -276,24 +306,25 @@ ApplyGuiToState(showNotice := true, syncControls := true) {
     meleeEnabled := meleeEnabledCtrl.Value
     meleeMode := (meleeModeCtrl.Value = 2) ? "click_and_space" : "space_only"
     meleeIntervalMs := ClampInt(ParseWhole(meleeIntervalCtrl.Value, defaultMeleeIntervalMs), 40, 5000)
-    meleeTapHoldMs := ClampInt(ParseWhole(meleeTapHoldCtrl.Value, defaultMeleeTapHoldMs), 5, 200)
+    meleeTapHoldMs := ClampInt(ParseWhole(meleeTapHoldCtrl.Value, defaultMeleeTapHoldMs), 1, 200)
     meleeAttackLeadMs := ClampInt(ParseWhole(meleeAttackLeadCtrl.Value, defaultMeleeAttackLeadMs), 0, 200)
+    outlineEnabled := outlineEnabledCtrl.Value
 
     chordEnabled := chordEnabledCtrl.Value
     chordTrigger := TriggerButtonName(chordTriggerCtrl.Value)
     chordIntervalMs := ClampInt(ParseWhole(chordIntervalCtrl.Value, defaultChordIntervalMs), 20, 5000)
-    chordTapHoldMs := ClampInt(ParseWhole(chordTapHoldCtrl.Value, defaultChordTapHoldMs), 5, 200)
+    chordTapHoldMs := ClampInt(ParseWhole(chordTapHoldCtrl.Value, defaultChordTapHoldMs), 1, 200)
 
     tech4Enabled := tech4EnabledCtrl.Value
     tech4Trigger := TriggerButtonName(tech4TriggerCtrl.Value)
     tech4IntervalMs := ClampInt(ParseWhole(tech4IntervalCtrl.Value, defaultTech4IntervalMs), 20, 5000)
-    tech4TapHoldMs := ClampInt(ParseWhole(tech4TapHoldCtrl.Value, defaultTech4TapHoldMs), 5, 200)
+    tech4TapHoldMs := ClampInt(ParseWhole(tech4TapHoldCtrl.Value, defaultTech4TapHoldMs), 1, 200)
     tech4SwapEnabled := tech4SwapEnabledCtrl.Value
     tech4SwapSlot := ClampInt(ParseWhole(tech4SwapCtrl.Value, defaultTech4SwapSlot), 1, 3)
 
     tech5Enabled := tech5EnabledCtrl.Value
     tech5IntervalMs := ClampInt(ParseWhole(tech5IntervalCtrl.Value, defaultTech5IntervalMs), 20, 5000)
-    tech5TapHoldMs := ClampInt(ParseWhole(tech5TapHoldCtrl.Value, defaultTech5TapHoldMs), 5, 200)
+    tech5TapHoldMs := ClampInt(ParseWhole(tech5TapHoldCtrl.Value, defaultTech5TapHoldMs), 1, 200)
 
     if syncControls {
         meleeIntervalCtrl.Value := meleeIntervalMs
@@ -326,6 +357,7 @@ UpdateGuiState() {
     global meleeEnabled
     global meleeIntervalMs
     global meleeMode
+    global outlineEnabled
     global statusText
     global tech4Enabled
     global tech4IntervalMs
@@ -339,13 +371,16 @@ UpdateGuiState() {
 
     statusText.Text := "Status: " (enabled ? "ON" : "OFF")
         . " | T1: " (meleeEnabled ? "ON" : "OFF") " " meleeIntervalMs " ms " ModeLabel(meleeMode)
+        . " | T2: " (outlineEnabled ? "ON" : "OFF")
         . " | T3: " (chordEnabled ? "ON" : "OFF") " " chordTrigger
         . " => " chordIntervalMs " ms"
         . " | T4: " (tech4Enabled ? "ON" : "OFF") " " tech4Trigger " => " tech4IntervalMs " ms"
         . (tech4SwapEnabled ? " swap" tech4SwapSlot : "")
         . " | T5: " (tech5Enabled ? "ON" : "OFF") " XButton2 => " tech5IntervalMs " ms"
 
-    hintText.Text := "T3 interval = " chordIntervalMs " ms | T3 hold = " chordTapHoldMs " ms"
+    hintText.Text := "T1 interval = " meleeIntervalMs " ms | T1 hold = " meleeTapHoldMs " ms"
+        . " | T2 colors = 68F072 / 07FF0E"
+        . " | T3 interval = " chordIntervalMs " ms | T3 hold = " chordTapHoldMs " ms"
         . " | T4 interval = " tech4IntervalMs " ms | T4 hold = " tech4TapHoldMs " ms"
         . " | T5 interval = " tech5IntervalMs " ms"
 
@@ -510,6 +545,26 @@ ResetMeleeSequence() {
     meleeSequenceDueAt := 0
 }
 
+ResetOutlineSequence() {
+    global outlineSequenceCooldownMs
+    global outlineSequenceDueAt
+    global outlineSequencePhase
+
+    switch outlineSequencePhase {
+        case "click_down":
+            SendEvent("{LButton up}")
+        case "space_down":
+            SendEvent("{Space up}")
+            SendEvent("{LButton up}")
+        case "wait_release":
+            SendEvent("{LButton up}")
+    }
+
+    outlineSequencePhase := "idle"
+    outlineSequenceDueAt := 0
+    outlineSequenceCooldownMs := 0
+}
+
 MeleeCancelHeld() {
     global appExe
     global enabled
@@ -525,6 +580,41 @@ MeleeCancelHeld() {
         return false
 
     return GetKeyState("RButton", "P") && GetKeyState("LButton", "P")
+}
+
+OutlineTriggerHeld() {
+    global appExe
+    global enabled
+    global outlineEnabled
+
+    if !enabled || !outlineEnabled || !WinActive("ahk_exe " appExe)
+        return false
+
+    if AltDown()
+        return false
+
+    return GetKeyState("RButton", "P") && !GetKeyState("LButton", "P")
+}
+
+OutlineTriggerCooldownMs() {
+    global outlinePrimaryColor
+    global outlinePrimaryCooldownMs
+    global outlineSecondaryColor
+    global outlineSecondaryCooldownMs
+    global outlineVariation
+
+    local px := 0
+    local py := 0
+    local x2 := A_ScreenWidth - 1
+    local y2 := A_ScreenHeight - 1
+
+    if PixelSearch(&px, &py, 0, 0, x2, y2, outlinePrimaryColor, outlineVariation)
+        return outlinePrimaryCooldownMs
+
+    if PixelSearch(&px, &py, 0, 0, x2, y2, outlineSecondaryColor, outlineVariation)
+        return outlineSecondaryCooldownMs
+
+    return 0
 }
 
 Technique3Held() {
@@ -566,10 +656,72 @@ Technique5Held() {
 }
 
 CheckMacros() {
+    CheckOutlineTrigger()
     CheckTechnique3()
     CheckTechnique4()
     CheckTechnique5()
     CheckMeleeCancel()
+}
+
+CheckOutlineTrigger() {
+    global outlineAttackLeadMs
+    global outlineSequenceCooldownMs
+    global outlineSequenceDueAt
+    global outlineSequencePhase
+    global outlineTapHoldMs
+
+    if !OutlineTriggerHeld() {
+        ResetOutlineSequence()
+        return
+    }
+
+    if (outlineSequencePhase = "click_down") {
+        if (A_TickCount < outlineSequenceDueAt)
+            return
+
+        SendEvent("{Space down}")
+        outlineSequencePhase := "space_down"
+        outlineSequenceDueAt := A_TickCount + outlineTapHoldMs
+        return
+    }
+
+    if (outlineSequencePhase = "space_down") {
+        if (A_TickCount < outlineSequenceDueAt)
+            return
+
+        SendEvent("{Space up}")
+        outlineSequencePhase := "wait_release"
+        outlineSequenceDueAt := A_TickCount + outlineAttackLeadMs
+        return
+    }
+
+    if (outlineSequencePhase = "wait_release") {
+        if (A_TickCount < outlineSequenceDueAt)
+            return
+
+        SendEvent("{LButton up}")
+        outlineSequencePhase := "cooldown"
+        outlineSequenceDueAt := A_TickCount + outlineSequenceCooldownMs
+        return
+    }
+
+    if (outlineSequencePhase = "cooldown") {
+        if (A_TickCount < outlineSequenceDueAt)
+            return
+
+        outlineSequencePhase := "idle"
+        outlineSequenceDueAt := 0
+        outlineSequenceCooldownMs := 0
+        return
+    }
+
+    outlineSequenceCooldownMs := OutlineTriggerCooldownMs()
+    if (outlineSequenceCooldownMs <= 0)
+        return
+
+    SendEvent("{LButton down}")
+    outlineSequencePhase := "click_down"
+    outlineSequenceDueAt := A_TickCount + outlineAttackLeadMs
 }
 
 CheckTechnique3() {
@@ -725,6 +877,7 @@ ToggleMacro(*) {
     enabled := !enabled
     lastMeleeCancelAt := 0
     ResetMeleeSequence()
+    ResetOutlineSequence()
     ResetTechnique3Pulse()
     ResetTechnique4Pulse()
     ResetTechnique5()
@@ -743,6 +896,14 @@ SaveConfig(*) {
     global meleeIntervalMs
     global meleeMode
     global meleeTapHoldMs
+    global outlineAttackLeadMs
+    global outlineEnabled
+    global outlinePrimaryColor
+    global outlinePrimaryCooldownMs
+    global outlineSecondaryColor
+    global outlineSecondaryCooldownMs
+    global outlineTapHoldMs
+    global outlineVariation
     global tech4Enabled
     global tech4IntervalMs
     global tech4SwapEnabled
@@ -762,6 +923,15 @@ SaveConfig(*) {
     IniWrite(meleeIntervalMs, configPath, "melee", "intervalMs")
     IniWrite(meleeTapHoldMs, configPath, "melee", "tapHoldMs")
     IniWrite(meleeAttackLeadMs, configPath, "melee", "attackLeadMs")
+
+    IniWrite(outlineEnabled, configPath, "outline", "enabled")
+    IniWrite(outlineVariation, configPath, "outline", "variation")
+    IniWrite(outlinePrimaryColor, configPath, "outline", "primaryColor")
+    IniWrite(outlineSecondaryColor, configPath, "outline", "secondaryColor")
+    IniWrite(outlineAttackLeadMs, configPath, "outline", "attackLeadMs")
+    IniWrite(outlineTapHoldMs, configPath, "outline", "tapHoldMs")
+    IniWrite(outlinePrimaryCooldownMs, configPath, "outline", "primaryCooldownMs")
+    IniWrite(outlineSecondaryCooldownMs, configPath, "outline", "secondaryCooldownMs")
 
     IniWrite(chordEnabled, configPath, "chord", "enabled")
     IniWrite(chordTrigger, configPath, "chord", "trigger")
@@ -792,6 +962,7 @@ ResetDefaults(*) {
     global meleeIntervalCtrl
     global meleeModeCtrl
     global meleeTapHoldCtrl
+    global outlineEnabledCtrl
     global tech4EnabledCtrl
     global tech4IntervalCtrl
     global tech4SwapCtrl
@@ -807,6 +978,8 @@ ResetDefaults(*) {
     meleeIntervalCtrl.Value := defaultMeleeIntervalMs
     meleeTapHoldCtrl.Value := defaultMeleeTapHoldMs
     meleeAttackLeadCtrl.Value := defaultMeleeAttackLeadMs
+
+    outlineEnabledCtrl.Value := defaultOutlineEnabled
 
     chordEnabledCtrl.Value := defaultChordEnabled
     chordTriggerCtrl.Value := TriggerButtonIndex(defaultChordTrigger)
@@ -830,6 +1003,7 @@ ResetDefaults(*) {
 
 StopScript(*) {
     ResetMeleeSequence()
+    ResetOutlineSequence()
     ResetTechnique3Pulse()
     ResetTechnique4Pulse()
     ResetTechnique5()

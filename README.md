@@ -15,6 +15,8 @@ Main controls:
 Techniques:
 
 - Technique 1: hold `RMB + LButton`
+- Technique 2: hold `RMB` in windowed mode with `Aim Outline = AnyWeapon`
+- Technique 2 triggers on outline colors `68F072` and `07FF0E`
 - Technique 3: hold the Technique 3 trigger
 - Technique 3 repeatedly taps `Alt + Space`
 - Technique 4: hold the Technique 4 trigger
@@ -25,5 +27,6 @@ Techniques:
 Notes:
 
 - Settings are saved to `project-zomboid-attack-cancel.ini` next to the script.
+- Technique 2 is based on PixelSearch and is intended for windowed mode.
 - The GitHub release includes a portable zip with `AutoHotkey64.exe` bundled.
 - Bundled AutoHotkey binaries remain subject to the AutoHotkey license.
