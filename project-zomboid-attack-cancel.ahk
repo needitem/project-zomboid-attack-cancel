@@ -20,6 +20,10 @@ defaultChordTrigger := "XButton1"
 defaultChordIntervalMs := 200
 defaultChordTapHoldMs := 18
 
+defaultTech5Enabled := 1
+defaultTech5IntervalMs := 110
+defaultTech5TapHoldMs := 18
+
 toggleKey := "F8"
 panicKey := "F9"
 fasterKey := "F10"
@@ -33,9 +37,13 @@ meleeSequenceDueAt := 0
 lastChordPulseAt := 0
 chordPulseActive := false
 chordPulseReleaseAt := 0
+lastTech5AltAt := 0
+tech5AltPulseActive := false
+tech5AltPulseReleaseAt := 0
+tech5SpaceHeld := false
 
 appExe := IniRead(configPath, "general", "appExe", IniRead(configPath, "macro", "appExe", defaultAppExe))
-tuneTarget := ClampInt(ParseWhole(IniRead(configPath, "general", "tuneTarget", defaultTuneTarget), defaultTuneTarget), 1, 2)
+tuneTarget := ClampInt(ParseWhole(IniRead(configPath, "general", "tuneTarget", defaultTuneTarget), defaultTuneTarget), 1, 3)
 
 meleeEnabled := ParseBool(IniRead(configPath, "melee", "enabled", defaultMeleeEnabled), defaultMeleeEnabled)
 meleeMode := IniRead(configPath, "melee", "mode", IniRead(configPath, "macro", "mode", defaultMeleeMode))
@@ -47,6 +55,10 @@ chordEnabled := ParseBool(IniRead(configPath, "chord", "enabled", defaultChordEn
 chordTrigger := IniRead(configPath, "chord", "trigger", defaultChordTrigger)
 chordIntervalMs := ClampInt(ParseWhole(IniRead(configPath, "chord", "intervalMs", defaultChordIntervalMs), defaultChordIntervalMs), 20, 5000)
 chordTapHoldMs := ClampInt(ParseWhole(IniRead(configPath, "chord", "tapHoldMs", defaultChordTapHoldMs), defaultChordTapHoldMs), 5, 200)
+
+tech5Enabled := ParseBool(IniRead(configPath, "tech5", "enabled", defaultTech5Enabled), defaultTech5Enabled)
+tech5IntervalMs := ClampInt(ParseWhole(IniRead(configPath, "tech5", "intervalMs", defaultTech5IntervalMs), defaultTech5IntervalMs), 20, 5000)
+tech5TapHoldMs := ClampInt(ParseWhole(IniRead(configPath, "tech5", "tapHoldMs", defaultTech5TapHoldMs), defaultTech5TapHoldMs), 5, 200)
 
 macroGui := Gui("+AlwaysOnTop", "Project Zomboid Attack Cancel")
 macroGui.MarginX := 12
@@ -60,7 +72,7 @@ macroGui.Add("Text", "xm y+12", "Game exe name")
 appExeCtrl := macroGui.Add("Edit", "xm w220", appExe)
 
 macroGui.Add("Text", "x+14 yp", "F10/F11 target")
-tuneTargetCtrl := macroGui.Add("DropDownList", "x+6 w170", ["Technique 1", "Technique 3 interval"])
+tuneTargetCtrl := macroGui.Add("DropDownList", "x+6 w170", ["Technique 1", "Technique 3 interval", "Technique 5 interval"])
 tuneTargetCtrl.Value := tuneTarget
 
 macroGui.Add("Text", "xm y+16", "Technique 1 - Melee cancel")
@@ -96,6 +108,18 @@ chordIntervalCtrl := macroGui.Add("Edit", "xm w90 Number", chordIntervalMs)
 macroGui.Add("Text", "x+14 yp", "Tap hold (ms)")
 chordTapHoldCtrl := macroGui.Add("Edit", "x+6 w90 Number", chordTapHoldMs)
 
+macroGui.Add("Text", "xm y+18", "Technique 5 - Hold Space + Tap Alt")
+tech5EnabledCtrl := macroGui.Add("Checkbox", "xm y+4", "Enable Technique 5 (hold Thumb 2 / XButton2)")
+tech5EnabledCtrl.Value := tech5Enabled
+
+macroGui.Add("Text", "xm y+6 w440", "Hold Thumb 2 (XButton2). The script holds Space and taps Alt.")
+
+macroGui.Add("Text", "xm y+10", "Interval (ms)")
+tech5IntervalCtrl := macroGui.Add("Edit", "xm w90 Number", tech5IntervalMs)
+
+macroGui.Add("Text", "x+14 yp", "Tap hold (ms)")
+tech5TapHoldCtrl := macroGui.Add("Edit", "x+6 w90 Number", tech5TapHoldMs)
+
 toggleButton := macroGui.Add("Button", "xm y+18 w110", "Start (F8)")
 saveButton := macroGui.Add("Button", "x+8 w90", "Save")
 resetButton := macroGui.Add("Button", "x+8 w110", "Reset Defaults")
@@ -103,7 +127,7 @@ resetButton := macroGui.Add("Button", "x+8 w110", "Reset Defaults")
 helpText := macroGui.Add(
     "Text",
     "xm y+14 w440",
-    "F8 start/stop, F10/F11 adjust the selected target, F9 exit. Technique 3 repeats Alt + Space while its trigger is held."
+    "F8 start/stop, F10/F11 adjust the selected target, F9 exit. Technique 3 repeats Alt + Space while its trigger is held. Technique 5 holds Space and taps Alt while XButton2 is held."
 )
 
 appExeCtrl.OnEvent("Change", OnSettingsChanged)
@@ -117,6 +141,9 @@ chordEnabledCtrl.OnEvent("Click", OnSettingsChanged)
 chordTriggerCtrl.OnEvent("Change", OnSettingsChanged)
 chordIntervalCtrl.OnEvent("Change", OnSettingsChanged)
 chordTapHoldCtrl.OnEvent("Change", OnSettingsChanged)
+tech5EnabledCtrl.OnEvent("Click", OnSettingsChanged)
+tech5IntervalCtrl.OnEvent("Change", OnSettingsChanged)
+tech5TapHoldCtrl.OnEvent("Change", OnSettingsChanged)
 toggleButton.OnEvent("Click", ToggleMacro)
 saveButton.OnEvent("Click", SaveConfig)
 resetButton.OnEvent("Click", ResetDefaults)
@@ -192,6 +219,12 @@ ApplyGuiToState(showNotice := true, syncControls := true) {
     global meleeModeCtrl
     global meleeTapHoldCtrl
     global meleeTapHoldMs
+    global tech5Enabled
+    global tech5EnabledCtrl
+    global tech5IntervalCtrl
+    global tech5IntervalMs
+    global tech5TapHoldCtrl
+    global tech5TapHoldMs
     global tuneTarget
     global tuneTargetCtrl
 
@@ -202,7 +235,7 @@ ApplyGuiToState(showNotice := true, syncControls := true) {
             appExeCtrl.Value := appExe
     }
 
-    tuneTarget := ClampInt(tuneTargetCtrl.Value, 1, 2)
+    tuneTarget := ClampInt(tuneTargetCtrl.Value, 1, 3)
 
     meleeEnabled := meleeEnabledCtrl.Value
     meleeMode := (meleeModeCtrl.Value = 2) ? "click_and_space" : "space_only"
@@ -215,12 +248,18 @@ ApplyGuiToState(showNotice := true, syncControls := true) {
     chordIntervalMs := ClampInt(ParseWhole(chordIntervalCtrl.Value, defaultChordIntervalMs), 20, 5000)
     chordTapHoldMs := ClampInt(ParseWhole(chordTapHoldCtrl.Value, defaultChordTapHoldMs), 5, 200)
 
+    tech5Enabled := tech5EnabledCtrl.Value
+    tech5IntervalMs := ClampInt(ParseWhole(tech5IntervalCtrl.Value, defaultTech5IntervalMs), 20, 5000)
+    tech5TapHoldMs := ClampInt(ParseWhole(tech5TapHoldCtrl.Value, defaultTech5TapHoldMs), 5, 200)
+
     if syncControls {
         meleeIntervalCtrl.Value := meleeIntervalMs
         meleeTapHoldCtrl.Value := meleeTapHoldMs
         meleeAttackLeadCtrl.Value := meleeAttackLeadMs
         chordIntervalCtrl.Value := chordIntervalMs
         chordTapHoldCtrl.Value := chordTapHoldMs
+        tech5IntervalCtrl.Value := tech5IntervalMs
+        tech5TapHoldCtrl.Value := tech5TapHoldMs
     }
     meleeAttackLeadCtrl.Enabled := (meleeMode = "click_and_space")
 
@@ -241,6 +280,8 @@ UpdateGuiState() {
     global meleeIntervalMs
     global meleeMode
     global statusText
+    global tech5Enabled
+    global tech5IntervalMs
     global toggleButton
     global tuneTarget
 
@@ -248,15 +289,27 @@ UpdateGuiState() {
         . " | T1: " (meleeEnabled ? "ON" : "OFF") " " meleeIntervalMs " ms " ModeLabel(meleeMode)
         . " | T3: " (chordEnabled ? "ON" : "OFF") " " chordTrigger
         . " => " chordIntervalMs " ms"
+        . " | T5: " (tech5Enabled ? "ON" : "OFF") " XButton2 => " tech5IntervalMs " ms"
 
-    hintText.Text := "Hotkey target: " ((tuneTarget = 2) ? "Technique 3 interval" : "Technique 1")
-        . " | T3 interval = " chordIntervalMs " ms | T3 hold = " chordTapHoldMs " ms"
+    hintText.Text := "Hotkey target: " TuneTargetLabel(tuneTarget)
+        . " | T3 interval = " chordIntervalMs " ms | T3 hold = " chordTapHoldMs " ms | T5 interval = " tech5IntervalMs " ms"
 
     toggleButton.Text := enabled ? "Stop (F8)" : "Start (F8)"
 }
 
 ModeLabel(value) {
     return (value = "click_and_space") ? "Click + Space" : "Space only"
+}
+
+TuneTargetLabel(value) {
+    switch value {
+        case 2:
+            return "Technique 3 interval"
+        case 3:
+            return "Technique 5 interval"
+        default:
+            return "Technique 1"
+    }
 }
 
 Notify(message) {
@@ -298,6 +351,57 @@ ResetTechnique3Pulse() {
 
     StopTechnique3Pulse()
     lastChordPulseAt := 0
+}
+
+StartTechnique5AltPulse(holdMs) {
+    global tech5AltPulseActive
+    global tech5AltPulseReleaseAt
+
+    SendEvent("{Blind}{LAlt down}")
+    tech5AltPulseActive := true
+    tech5AltPulseReleaseAt := A_TickCount + holdMs
+}
+
+StopTechnique5AltPulse() {
+    global tech5AltPulseActive
+    global tech5AltPulseReleaseAt
+
+    if !tech5AltPulseActive {
+        tech5AltPulseReleaseAt := 0
+        return
+    }
+
+    SendEvent("{Blind}{LAlt up}")
+    tech5AltPulseActive := false
+    tech5AltPulseReleaseAt := 0
+}
+
+HoldTechnique5Space() {
+    global tech5SpaceHeld
+
+    if tech5SpaceHeld
+        return
+
+    SendEvent("{Blind}{Space down}")
+    tech5SpaceHeld := true
+}
+
+ReleaseTechnique5Space() {
+    global tech5SpaceHeld
+
+    if !tech5SpaceHeld
+        return
+
+    SendEvent("{Blind}{Space up}")
+    tech5SpaceHeld := false
+}
+
+ResetTechnique5() {
+    global lastTech5AltAt
+
+    StopTechnique5AltPulse()
+    ReleaseTechnique5Space()
+    lastTech5AltAt := 0
 }
 
 AltDown() {
@@ -351,8 +455,20 @@ Technique3Held() {
     return true
 }
 
+Technique5Held() {
+    global appExe
+    global enabled
+    global tech5Enabled
+
+    if !enabled || !tech5Enabled || !WinActive("ahk_exe " appExe)
+        return false
+
+    return GetKeyState("XButton2", "P")
+}
+
 CheckMacros() {
     CheckTechnique3()
+    CheckTechnique5()
     CheckMeleeCancel()
 }
 
@@ -379,6 +495,33 @@ CheckTechnique3() {
 
     StartTechnique3Pulse(chordTapHoldMs)
     lastChordPulseAt := A_TickCount
+}
+
+CheckTechnique5() {
+    global lastTech5AltAt
+    global tech5AltPulseActive
+    global tech5AltPulseReleaseAt
+    global tech5IntervalMs
+    global tech5TapHoldMs
+
+    if !Technique5Held() {
+        ResetTechnique5()
+        return
+    }
+
+    HoldTechnique5Space()
+
+    if tech5AltPulseActive {
+        if (A_TickCount >= tech5AltPulseReleaseAt)
+            StopTechnique5AltPulse()
+        return
+    }
+
+    if (A_TickCount - lastTech5AltAt < tech5IntervalMs)
+        return
+
+    StartTechnique5AltPulse(tech5TapHoldMs)
+    lastTech5AltAt := A_TickCount
 }
 
 CheckMeleeCancel() {
@@ -451,6 +594,7 @@ ToggleMacro(*) {
     lastMeleeCancelAt := 0
     ResetMeleeSequence()
     ResetTechnique3Pulse()
+    ResetTechnique5()
     UpdateGuiState()
     Notify("Attack cancel: " (enabled ? "ON" : "OFF"))
 }
@@ -460,6 +604,8 @@ AdjustInterval(delta, *) {
     global chordIntervalMs
     global meleeIntervalCtrl
     global meleeIntervalMs
+    global tech5IntervalCtrl
+    global tech5IntervalMs
     global tuneTarget
 
     ApplyGuiToState(false)
@@ -468,6 +614,10 @@ AdjustInterval(delta, *) {
         chordIntervalMs := ClampInt(chordIntervalMs + delta, 20, 5000)
         chordIntervalCtrl.Value := chordIntervalMs
         Notify("Technique 3 interval = " chordIntervalMs " ms")
+    } else if (tuneTarget = 3) {
+        tech5IntervalMs := ClampInt(tech5IntervalMs + delta, 20, 5000)
+        tech5IntervalCtrl.Value := tech5IntervalMs
+        Notify("Technique 5 interval = " tech5IntervalMs " ms")
     } else {
         meleeIntervalMs := ClampInt(meleeIntervalMs + delta, 40, 5000)
         meleeIntervalCtrl.Value := meleeIntervalMs
@@ -488,6 +638,9 @@ SaveConfig(*) {
     global meleeIntervalMs
     global meleeMode
     global meleeTapHoldMs
+    global tech5Enabled
+    global tech5IntervalMs
+    global tech5TapHoldMs
     global tuneTarget
 
     ApplyGuiToState(false)
@@ -506,6 +659,10 @@ SaveConfig(*) {
     IniWrite(chordIntervalMs, configPath, "chord", "intervalMs")
     IniWrite(chordTapHoldMs, configPath, "chord", "tapHoldMs")
 
+    IniWrite(tech5Enabled, configPath, "tech5", "enabled")
+    IniWrite(tech5IntervalMs, configPath, "tech5", "intervalMs")
+    IniWrite(tech5TapHoldMs, configPath, "tech5", "tapHoldMs")
+
     Notify("Saved to project-zomboid-attack-cancel.ini")
 }
 
@@ -520,6 +677,9 @@ ResetDefaults(*) {
     global meleeIntervalCtrl
     global meleeModeCtrl
     global meleeTapHoldCtrl
+    global tech5EnabledCtrl
+    global tech5IntervalCtrl
+    global tech5TapHoldCtrl
     global tuneTargetCtrl
 
     appExeCtrl.Value := defaultAppExe
@@ -536,6 +696,10 @@ ResetDefaults(*) {
     chordIntervalCtrl.Value := defaultChordIntervalMs
     chordTapHoldCtrl.Value := defaultChordTapHoldMs
 
+    tech5EnabledCtrl.Value := defaultTech5Enabled
+    tech5IntervalCtrl.Value := defaultTech5IntervalMs
+    tech5TapHoldCtrl.Value := defaultTech5TapHoldMs
+
     ApplyGuiToState(false)
     Notify("Defaults restored")
 }
@@ -543,5 +707,6 @@ ResetDefaults(*) {
 StopScript(*) {
     ResetMeleeSequence()
     ResetTechnique3Pulse()
+    ResetTechnique5()
     ExitApp()
 }

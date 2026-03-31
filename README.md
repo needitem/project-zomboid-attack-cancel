@@ -19,6 +19,8 @@ Techniques:
 - Technique 1: hold `RMB + LButton`
 - Technique 3: hold the Technique 3 trigger
 - Technique 3 repeatedly taps `Alt + Space`
+- Technique 5: hold `Thumb 2 / XButton2`
+- Technique 5 holds `Space` and repeatedly taps `Alt`
 
 Notes:
 
